@@ -1,0 +1,1393 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fit Energia | Análise de Fluxos, Arquitetura e Plano de Evolução | Blip</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --color-primary: rgb(30,107,241);
+  --color-primary-dark: #052F91;
+  --color-brand: rgb(0,195,255);
+  --color-surface-0: #fff;
+  --color-surface-1: #f6f6f6;
+  --color-surface-2: #ededed;
+  --color-content-default: rgb(40,40,40);
+  --color-content-ghost: rgb(105,105,105);
+  --color-border-1: rgba(0,0,0,0.12);
+  --color-positive: rgb(0,150,75);
+  --color-negative: rgb(200,30,30);
+  --color-warning: #B06000;
+  --bar-base: #8FB0F5;
+  --bar-emph: #052F91;
+  --nav-h: 58px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+html,body{background:#f4f6f9;font-family:'Nunito Sans',system-ui,sans-serif;color:var(--color-content-default);width:100%;min-height:100vh}
+body{color-scheme:light}
+.page{width:100%;min-height:100vh;background:#fff;display:flex;flex-direction:column}
+code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.92em;background:var(--color-surface-1);padding:1px 6px;border-radius:5px}
+a{color:var(--color-primary)}
+:focus-visible{outline:3px solid rgba(30,107,241,.45);outline-offset:2px;border-radius:4px}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#031B54 0%,#0056C6 100%);padding:44px 5% 48px;position:relative;overflow:hidden;color:#fff}
+.header::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 85% 15%,rgba(0,195,255,.15) 0%,transparent 55%);pointer-events:none}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:32px;flex-wrap:wrap;gap:14px}
+.header-logos{display:flex;align-items:center;gap:18px}
+.header-logos img{height:36px;width:auto;object-fit:contain}
+.header-logos .divider{height:22px;width:1px;background:rgba(255,255,255,.25)}
+.client-pill{font-size:15px;font-weight:800;letter-spacing:.04em;color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 14px}
+.header-badge{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 16px}
+.header-main{max-width:980px}
+.header-eyebrow{font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--color-brand);margin-bottom:12px}
+.header-headline{font-size:clamp(28px,4vw,48px);font-weight:800;line-height:1.1;letter-spacing:-.02em;margin-bottom:18px}
+.header-headline .line2{color:var(--color-brand)}
+.header-summary{font-size:15px;line-height:1.6;color:rgba(255,255,255,.9);max-width:800px;margin-bottom:28px}
+.header-summary strong{color:#fff}
+.header-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.2);border-radius:14px;overflow:hidden}
+.kpi-item{padding:18px;text-align:center;position:relative}
+.kpi-item+.kpi-item::before{content:'';position:absolute;left:0;top:16px;bottom:16px;width:1px;background:rgba(255,255,255,.18)}
+.kpi-label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.8);margin-bottom:8px}
+.kpi-value{font-size:34px;font-weight:800;color:#fff;line-height:1;font-variant-numeric:tabular-nums}
+.kpi-value.accent{color:var(--color-brand)}
+.kpi-sub{font-size:11px;color:rgba(255,255,255,.72);margin-top:6px}
+
+/* NAV (sticky) */
+.nav-wrap{position:sticky;top:0;z-index:50;background:var(--color-surface-1);border-bottom:1px solid var(--color-border-1);box-shadow:0 2px 8px rgba(0,0,0,.04)}
+.nav-tabs{display:flex;padding:0 5%;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
+.nav-tab{appearance:none;background:none;border:none;font-family:inherit;padding:0 20px;height:var(--nav-h);font-size:13px;font-weight:700;color:var(--color-content-ghost);cursor:pointer;border-bottom:3px solid transparent;white-space:nowrap;transition:color .2s,background .2s}
+.nav-tab:hover{color:var(--color-primary)}
+.nav-tab[aria-selected="true"]{color:var(--color-primary);border-bottom-color:var(--color-primary);background:#fff}
+.nav-tab .n{display:inline-block;width:20px;height:20px;line-height:20px;text-align:center;border-radius:50%;background:var(--color-surface-2);font-size:11px;margin-right:8px}
+.nav-tab[aria-selected="true"] .n{background:var(--color-primary);color:#fff}
+.nav-tab .pill{display:inline-block;margin-left:8px;min-width:20px;padding:0 6px;border-radius:999px;background:rgba(215,35,35,.12);color:var(--color-negative);font-size:11px}
+
+/* SECTIONS */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.section{padding:44px 5%;border-bottom:1px solid var(--color-border-1)}
+.section:last-child{border-bottom:none}
+.sh{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sh-num{width:24px;height:24px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sh-eyebrow{font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--color-primary)}
+.sh-title{font-size:27px;font-weight:800;letter-spacing:-.01em;margin-bottom:8px;line-height:1.15}
+.sh-lead{font-size:14px;line-height:1.6;color:var(--color-content-ghost);margin-bottom:24px;max-width:860px}
+.h3{font-size:16px;font-weight:800;margin:30px 0 12px;color:var(--color-primary-dark)}
+.h3:first-of-type{margin-top:0}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:28px}
+.toc a{font-size:12px;font-weight:700;text-decoration:none;color:var(--color-primary);background:rgba(30,107,241,.08);border-radius:999px;padding:6px 14px}
+.toc a:hover{background:rgba(30,107,241,.16)}
+[id]{scroll-margin-top:calc(var(--nav-h) + 16px)}
+
+/* TABLES */
+.table-wrap{overflow-x:auto;border:1px solid var(--color-border-1);border-radius:10px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{background:var(--color-primary-dark);color:#fff;font-weight:700;font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:13px 14px;text-align:left;white-space:nowrap}
+tbody tr{border-bottom:1px solid var(--color-border-1)}
+tbody tr:hover{background:var(--color-surface-1)}
+tbody td{padding:12px 14px;vertical-align:top;line-height:1.5}
+td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+tr.total-row{background:var(--color-primary-dark);color:#fff;font-weight:800}
+tr.total-row td{color:#fff;border-bottom:none}
+.badge{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:.03em;white-space:nowrap}
+.b-red{background:rgba(215,35,35,.12);color:var(--color-negative)}
+.b-blue{background:rgba(30,107,241,.12);color:var(--color-primary)}
+.b-green{background:rgba(0,180,90,.14);color:var(--color-positive)}
+.b-amber{background:rgba(255,152,0,.16);color:#9A4A00}
+.b-gray{background:var(--color-surface-2);color:#555}
+.src{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:5px;margin-right:6px;vertical-align:1px}
+.src.fluxo{background:#E3EEFF;color:#0D47A1}
+.src.dados{background:#E6F4EA;color:#137333}
+.src.infer{background:#FFF3E0;color:#9A4A00}
+
+/* CARDS */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px}
+.grid-3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{background:#fff;border:1px solid var(--color-border-1);border-radius:14px;padding:22px;box-shadow:0 2px 8px rgba(0,0,0,.03);transition:border-color .25s,box-shadow .25s}
+.card:hover{border-color:var(--color-primary);box-shadow:0 6px 18px rgba(30,107,241,.12)}
+.card h4{font-size:15px;font-weight:800;color:var(--color-primary-dark);margin-bottom:8px;line-height:1.3}
+.card p,.card li{font-size:13px;line-height:1.55}
+.card ul{padding-left:18px;margin-top:6px}
+.card .more{display:inline-block;margin-top:12px;font-size:12px;font-weight:800;color:var(--color-primary);cursor:pointer;background:none;border:none;font-family:inherit;padding:0}
+.card .more:hover{text-decoration:underline}
+.num-big{font-size:30px;font-weight:800;color:var(--color-primary);line-height:1;font-variant-numeric:tabular-nums}
+
+/* ALERTS */
+.alert-box{padding:16px 18px;border-radius:10px;margin-bottom:20px;font-size:13px;line-height:1.6}
+.alert-box.info{background:#E6F4FE;border:1px solid #C2E7FF;color:#004A77}
+.alert-box.warning{background:#FEF7E0;border:1px solid #F5E2A8;color:#7A4A00}
+.alert-box.danger{background:#FCE8E6;border:1px solid #FAD2CF;color:#9C1C18}
+.alert-box.ok{background:#E6F4EA;border:1px solid #CEEAD6;color:#0F5C2A}
+.alert-box strong{font-weight:800}
+.callout{border-left:5px solid var(--color-primary);background:#F1F6FF;padding:16px 20px;border-radius:0 10px 10px 0;font-size:15px;line-height:1.55;font-weight:700;color:var(--color-primary-dark)}
+
+/* CHARTS */
+.chart-card{background:#fff;border:1px solid var(--color-border-1);border-radius:14px;padding:20px 22px}
+.chart-title{font-size:14px;font-weight:800;color:var(--color-primary-dark);margin-bottom:2px}
+.chart-sub{font-size:12px;color:var(--color-content-ghost);margin-bottom:14px;line-height:1.45}
+.hbar-row{display:grid;grid-template-columns:minmax(120px,38%) 1fr 64px;align-items:center;gap:10px;padding:4px 0;border-radius:6px;outline-offset:0}
+.hbar-row:hover,.hbar-row:focus-visible{background:var(--color-surface-1)}
+.hbar-label{font-size:12px;line-height:1.3;color:var(--color-content-default)}
+.hbar-label small{display:block;color:var(--color-content-ghost);font-size:10.5px}
+.hbar-track{height:14px;position:relative;border-bottom:1px solid transparent}
+.hbar-fill{height:100%;border-radius:0 4px 4px 0;background:var(--bar-base);min-width:2px}
+.hbar-fill.emph{background:var(--bar-emph)}
+.hbar-val{font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11.5px;color:var(--color-content-ghost);margin-bottom:10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-2px}
+.chart-card details{margin-top:12px;font-size:12px}
+.chart-card summary{cursor:pointer;color:var(--color-primary);font-weight:700}
+.chart-card details table{margin-top:8px;font-size:12px}
+.chart-card details th{background:var(--color-surface-2);color:#333;padding:8px 10px}
+.chart-card details td{padding:7px 10px}
+svg.cols{width:100%;height:auto;display:block;color:var(--color-content-default)}
+svg.cols text{font-family:inherit}
+.tip{position:fixed;z-index:200;pointer-events:none;background:#14213d;color:#fff;font-size:12px;line-height:1.45;padding:8px 11px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,.25);opacity:0;transition:opacity .12s;max-width:260px}
+.tip.on{opacity:1}
+
+/* DIAGRAM */
+figure.diagram{background:var(--color-surface-1);border:1px solid var(--color-border-1);border-radius:14px;padding:18px}
+figure.diagram svg{width:100%;height:auto;display:block;color:#2b2f3a}
+figure.diagram figcaption{font-size:12px;color:var(--color-content-ghost);margin-top:10px;line-height:1.5}
+.cascade{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0 14px}
+.cascade .step{background:#fff;border:1px solid var(--color-border-1);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:800;color:var(--color-primary-dark)}
+.cascade .arrow{color:var(--color-content-ghost);font-weight:800}
+.cascade .step.chk{border-color:var(--color-primary);background:#EAF1FF}
+
+/* DETAILS / ACCORDION */
+details.acc{border:1px solid var(--color-border-1);border-radius:10px;margin-bottom:10px;background:#fff}
+details.acc>summary{cursor:pointer;padding:14px 18px;font-size:14px;font-weight:800;color:var(--color-primary-dark);list-style:none;display:flex;justify-content:space-between;align-items:center;gap:12px}
+details.acc>summary::-webkit-details-marker{display:none}
+details.acc>summary::after{content:'+';font-size:20px;color:var(--color-primary);font-weight:700}
+details.acc[open]>summary::after{content:'−'}
+details.acc .acc-body{padding:0 18px 16px;font-size:13px;line-height:1.6}
+details.acc .acc-body ul{padding-left:18px}
+
+/* MATRIX */
+.matrix-container{background:var(--color-surface-1);border:1px solid var(--color-border-1);border-radius:14px;padding:24px 20px 16px}
+.matrix-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:#fff;border:1px solid var(--color-border-1);border-radius:10px;padding:12px}
+.mq{border:1px dashed rgba(0,0,0,.1);border-radius:8px;padding:34px 12px 12px;min-height:230px;position:relative}
+.mq-tag{position:absolute;top:10px;left:12px;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+.mq-nodes{display:flex;flex-wrap:wrap;gap:14px 18px}
+.mnode{display:flex;flex-direction:column;align-items:center;width:112px;cursor:pointer;background:none;border:none;font-family:inherit;transition:transform .2s}
+.mnode:hover{transform:scale(1.07)}
+.mcircle{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 5px 12px rgba(0,0,0,.1);font-size:12px;font-weight:800}
+.mnode .l{font-size:11px;font-weight:800;margin-top:6px;text-align:center;line-height:1.25;color:var(--color-content-default)}
+.mnode .s{font-size:10px;color:var(--color-content-ghost);font-weight:600;text-align:center}
+.c-quick{background:#E8F5E9;border:2.5px solid #4CAF50;color:#1B5E20}
+.c-plan{background:#E3F2FD;border:2.5px solid #2196F3;color:#0D47A1}
+.c-op{background:#FFF3E0;border:2.5px solid #FF9800;color:#8A4300}
+.c-no{background:#ededed;border:2.5px solid #aaa;color:#555}
+.matrix-axis{display:flex;justify-content:space-between;margin-top:12px;font-size:11px;font-weight:700;color:var(--color-content-ghost);gap:10px}
+@media (max-width:640px){.matrix-grid{grid-template-columns:1fr}}
+
+/* PROPOSAL CARDS */
+.proposal-card{background:#fff;border:1px solid var(--color-border-1);border-radius:14px;padding:22px;margin-bottom:18px;box-shadow:0 2px 8px rgba(0,0,0,.03);transition:all .3s}
+.proposal-card:hover{border-color:var(--color-primary);box-shadow:0 6px 18px rgba(30,107,241,.12)}
+.proposal-card.flash{border-color:var(--color-primary);background:#EEF5FF;box-shadow:0 0 20px rgba(30,107,241,.25)}
+.proposal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;padding-bottom:12px;border-bottom:1px solid var(--color-border-1);flex-wrap:wrap;gap:10px}
+.proposal-title{font-size:16px;font-weight:800;color:var(--color-primary-dark);display:flex;align-items:center;gap:10px}
+.proposal-number{width:28px;height:28px;border-radius:50%;background:var(--color-primary);color:#fff;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.proposal-tag{font-size:11px;font-weight:800;padding:4px 12px;border-radius:999px;letter-spacing:.05em;text-transform:uppercase}
+.proposal-tag.quickwin{background:rgba(0,180,90,.14);color:var(--color-positive)}
+.proposal-tag.arch{background:rgba(30,107,241,.12);color:var(--color-primary)}
+.proposal-tag.ux{background:rgba(255,152,0,.16);color:#9A4A00}
+.proposal-tag.gov{background:rgba(120,120,120,.16);color:#444}
+.proposal-tag.oferta{background:rgba(0,195,255,.16);color:#00607A}
+.proposal-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:768px){.proposal-grid{grid-template-columns:1fr}}
+.proposal-box{padding:13px 15px;border-radius:10px;font-size:12.5px;line-height:1.55}
+.proposal-box.problem{background:#FFEEEF;border:1px solid #F7D4D1;color:#9C1C18}
+.proposal-box.solution{background:#E6F4FE;border:1px solid #C2E7FF;color:#004A77}
+.proposal-box.gains{background:#E6F4EA;border:1px solid #CEEAD6;color:#0F5C2A;grid-column:1/-1}
+.proposal-box.meta{background:var(--color-surface-1);border:1px solid var(--color-border-1);color:#444;grid-column:1/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.proposal-box strong{display:block;font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.proposal-box ul{padding-left:16px}
+
+/* CHAT PREVIEW */
+.chat-preview-wrap{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media (max-width:768px){.chat-preview-wrap{grid-template-columns:1fr}}
+.chat-box{background:#E5DDD5;border-radius:12px;padding:16px;border:1px solid var(--color-border-1)}
+.chat-title{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.chat-title.before{color:#B71C1C}.chat-title.after{color:#1B5E20}
+.bub{background:#fff;border-radius:8px;padding:9px 12px;margin-bottom:8px;font-size:12px;line-height:1.45;box-shadow:0 1px 2px rgba(0,0,0,.15);max-width:88%}
+.bub.user{background:#DCF8C6;margin-left:auto}
+.bub .btns{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.bub .btns span{display:block;text-align:center;border-top:1px solid #e4e4e4;padding-top:6px;color:#0A7CFF;font-weight:700}
+
+/* ROADMAP */
+.roadmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.rm-col{border:1px solid var(--color-border-1);border-radius:14px;overflow:hidden;background:#fff}
+.rm-head{padding:14px 18px;font-weight:800;color:#fff;font-size:14px}
+.rm-head small{display:block;font-weight:600;opacity:.85;font-size:11px;margin-top:2px}
+.rm-1{background:#1B8A4A}.rm-2{background:var(--color-primary)}.rm-3{background:var(--color-primary-dark)}
+.rm-col ul{list-style:none;padding:14px 18px}
+.rm-col li{font-size:12.5px;line-height:1.5;padding:7px 0;border-bottom:1px solid var(--color-border-1);cursor:pointer}
+.rm-col li:last-child{border-bottom:none}
+.rm-col li:hover{color:var(--color-primary)}
+.rm-col li b{color:var(--color-primary-dark)}
+
+/* SIMULATOR */
+.sim-box{background:var(--color-surface-1);padding:26px;border-radius:14px;border:1px solid var(--color-border-1);margin-bottom:24px}
+.sim-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-bottom:22px}
+.sim-grid label{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--color-content-ghost);display:block;margin-bottom:8px}
+.sim-input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--color-border-1);font-size:16px;font-weight:700;font-family:inherit;background:#fff;color:var(--color-content-default)}
+.sim-input:focus{outline:none;border-color:var(--color-primary);box-shadow:0 0 0 3px rgba(30,107,241,.15)}
+input[type=range]{width:100%;accent-color:var(--color-primary)}
+.range-val{font-size:20px;font-weight:800;color:var(--color-primary);margin-bottom:4px}
+.recap-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;background:#fff;border:1px solid var(--color-border-1);border-radius:14px;padding:22px;text-align:center}
+.recap-kpi-value{font-size:32px;font-weight:800;color:var(--color-primary);font-variant-numeric:tabular-nums;line-height:1}
+.recap-kpi-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--color-content-ghost);margin-top:8px}
+.recap-kpi-sub{font-size:11.5px;color:var(--color-content-ghost);margin-top:4px}
+
+/* OPEN POINTS */
+.progress-card{display:flex;align-items:center;gap:20px;flex-wrap:wrap;background:var(--color-surface-1);border:1px solid var(--color-border-1);border-radius:14px;padding:18px 22px;margin-bottom:24px}
+.progress-bar{flex:1;min-width:200px;height:10px;background:var(--color-surface-2);border-radius:999px;overflow:hidden}
+.progress-bar>div{height:100%;background:var(--color-positive);width:0;transition:width .3s}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px}
+.chip{appearance:none;border:1px solid var(--color-border-1);background:#fff;font-family:inherit;font-size:12px;font-weight:700;color:#444;padding:6px 14px;border-radius:999px;cursor:pointer}
+.chip:hover{border-color:var(--color-primary);color:var(--color-primary)}
+.chip[aria-pressed="true"]{background:var(--color-primary);border-color:var(--color-primary);color:#fff}
+.btn{appearance:none;border:none;background:var(--color-primary);color:#fff;font-family:inherit;font-weight:800;font-size:12.5px;padding:9px 18px;border-radius:9px;cursor:pointer}
+.btn:hover{background:var(--color-primary-dark)}
+.btn.ghost{background:#fff;color:var(--color-primary);border:1px solid var(--color-primary)}
+.search{padding:9px 14px;border-radius:9px;border:1px solid var(--color-border-1);font-family:inherit;font-size:13px;min-width:240px;background:#fff;color:var(--color-content-default)}
+.q-item{display:grid;grid-template-columns:28px 1fr;gap:12px;padding:14px 16px;border:1px solid var(--color-border-1);border-radius:10px;margin-bottom:10px;background:#fff}
+.q-item.done{background:var(--color-surface-1);opacity:.75}
+.q-item.done .q-text{text-decoration:line-through}
+.q-item input{width:18px;height:18px;margin-top:3px;accent-color:var(--color-primary)}
+.q-text{font-size:13.5px;font-weight:700;line-height:1.5}
+.q-why{font-size:12px;color:var(--color-content-ghost);margin-top:4px;line-height:1.5}
+.q-meta{margin-top:6px;display:flex;gap:6px;flex-wrap:wrap}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:#14213d;color:#fff;font-size:13px;font-weight:700;padding:10px 20px;border-radius:999px;opacity:0;transition:all .25s;z-index:300;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.to-top{position:fixed;right:20px;bottom:24px;z-index:60;background:var(--color-primary);color:#fff;border:none;border-radius:50%;width:44px;height:44px;font-size:18px;cursor:pointer;box-shadow:0 6px 16px rgba(0,0,0,.25);opacity:0;pointer-events:none;transition:opacity .2s}
+.to-top.on{opacity:1;pointer-events:auto}
+
+.footer{background:var(--color-primary-dark);padding:26px 5%;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;color:#fff}
+.footer-action{font-size:13px;color:rgba(255,255,255,.88);max-width:700px;line-height:1.55}
+.footer-action strong{color:#fff}
+.footer-date{font-size:11px;color:rgba(255,255,255,.65);letter-spacing:.1em;text-transform:uppercase}
+
+@media print{
+  .nav-wrap,.to-top,.toast,.toolbar,.toc{display:none!important}
+  .tab-panel{display:block!important}
+  .header{padding:24px 5%}
+  .section{break-inside:avoid-page}
+  .card,.proposal-card,.chart-card{break-inside:avoid}
+  details.acc>*{display:block!important}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-top">
+    <div class="header-logos">
+      <img src="https://digital.blip.ai/wp-content/uploads/2023/05/BLIP_LOGO-1-1024x412.png" alt="Blip" onerror="this.outerHTML='<span class=&quot;client-pill&quot; style=&quot;border:none;padding:0;font-size:22px&quot;>blip</span>'">
+      <div class="divider"></div>
+      <span class="client-pill">Fit Energia</span>
+    </div>
+    <div class="header-badge">Relatório técnico · Rascunho para revisão</div>
+  </div>
+  <div class="header-main">
+    <div class="header-eyebrow">Fit Energia · Autosserviço, transbordo e arquitetura (15 fluxos Blip)</div>
+    <h1 class="header-headline">
+      <div>15 fluxos mapeados.</div>
+      <div class="line2">~60% dos tickets chegam sem motivo registrado.</div>
+      <div>Um quick win em 3 semanas.</div>
+    </h1>
+    <p class="header-summary">
+      Análise técnica dos <strong>15 JSONs exportados do Blip Builder</strong> (Principal e 14 subbots), cruzada com os dados operacionais de <strong>julho a outubro de 2026</strong>. O foco é <strong>reduzir o transbordo para atendimento humano</strong>, melhorar a triagem e preparar a evolução dos agents no <strong>Studio da Blip</strong>.
+    </p>
+    <div class="header-kpis">
+      <div class="kpi-item"><div class="kpi-label">Fluxos analisados</div><div class="kpi-value">15</div><div class="kpi-sub">Principal + 14 subbots</div></div>
+      <div class="kpi-item"><div class="kpi-label">Blocos mapeados</div><div class="kpi-value">584</div><div class="kpi-sub">~540 scripts · ~220 chamadas HTTP</div></div>
+      <div class="kpi-item"><div class="kpi-label">Transbordos (jul a out)</div><div class="kpi-value accent">~85k</div><div class="kpi-sub">evento "Redireciona para atendimento humano"</div></div>
+      <div class="kpi-item"><div class="kpi-label">Tickets sem motivo (set)</div><div class="kpi-value accent">~60%</div><div class="kpi-sub">tag vazia ou "Inatividade"</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<div class="nav-wrap">
+  <div class="nav-tabs" role="tablist" aria-label="Seções do relatório">
+    <button class="nav-tab" role="tab" data-tab="resumo"><span class="n">1</span>Resumo</button>
+    <button class="nav-tab" role="tab" data-tab="estudos"><span class="n">2</span>Estudos e dados</button>
+    <button class="nav-tab" role="tab" data-tab="arquitetura"><span class="n">3</span>Arquitetura</button>
+    <button class="nav-tab" role="tab" data-tab="transbordo"><span class="n">4</span>Transbordo e triagem</button>
+    <button class="nav-tab" role="tab" data-tab="evolucoes"><span class="n">5</span>Evoluções</button>
+    <button class="nav-tab" role="tab" data-tab="simulador"><span class="n">6</span>Simulador</button>
+    <button class="nav-tab" role="tab" data-tab="abertos"><span class="n">7</span>Pontos em aberto<span class="pill" id="open-pill">0</span></button>
+  </div>
+</div>
+
+<!-- ============ TAB 1: RESUMO ============ -->
+<section class="tab-panel" id="panel-resumo" role="tabpanel">
+  <div class="section">
+    <div class="sh"><div class="sh-num">1</div><div class="sh-eyebrow">Resumo executivo</div></div>
+    <h2 class="sh-title">O que encontramos e o que recomendamos</h2>
+    <p class="sh-lead">Os achados abaixo combinam o que está provado nos fluxos, o que vem dos dados operacionais do time e o que ainda é inferência. Cada afirmação carrega uma etiqueta de origem.</p>
+
+    <div class="alert-box info">
+      <strong>Como ler as etiquetas:</strong>
+      <span class="src fluxo">Fluxo</span> comprovado no JSON ·
+      <span class="src dados">Dados do time</span> vem do diagnóstico e das telas de métricas ·
+      <span class="src infer">Inferência</span> hipótese coerente que ainda precisa de confirmação.
+    </div>
+
+    <h3 class="h3">Top 3 achados</h3>
+    <div class="grid-3">
+      <div class="card">
+        <span class="src dados">Dados do time</span><span class="src fluxo">Fluxo</span>
+        <h4 style="margin-top:10px">1. A fila parece mais ocupação do que demanda</h4>
+        <p>~55k tickets/mês são <code>null</code> ou <code>Inatividade</code>, com TMA mediano de 21 a 25 min (a janela de timeout). A regra de fila do bot usa tickets abertos ÷ atendentes online ≥ 5, então ticket morto conta como ocupação.</p>
+        <button class="more" data-go="estudos/ch-tags">Ver dados →</button>
+      </div>
+      <div class="card">
+        <span class="src fluxo">Fluxo</span>
+        <h4 style="margin-top:10px">2. O desenho empurra para o humano</h4>
+        <p>Retorno não mapeado, erro do Whitewall, "Não" em "Consegui te ajudar?", 3 pedidos de atendente e qualquer resposta na IA Cancelamento terminam em transbordo, sem retry.</p>
+        <button class="more" data-go="transbordo/motivos">Ver motivos →</button>
+      </div>
+      <div class="card">
+        <span class="src fluxo">Fluxo</span><span class="src dados">Dados do time</span>
+        <h4 style="margin-top:10px">3. Três leituras do diagnóstico viram rótulos</h4>
+        <p>"Respondeu fora do prazo", "Input inesperado" e "Valida Resposta Inadimplência: Transbordo" são rótulos de tracking. Nenhum deles é, sozinho, uma falha ou um transbordo real.</p>
+        <button class="more" data-go="estudos/correcoes">Ver correções →</button>
+      </div>
+    </div>
+
+    <div class="alert-box danger" style="margin-top:22px">
+      <strong>Alerta de segurança:</strong> há cerca de <strong>94 ocorrências de credenciais em texto puro</strong> nos exports (chave da API Blip, bearers do HubSpot e da API da Fit, token do Apps Script). Recomendamos rotacionar e mover para <code>{{config.*}}</code>, que parte dos blocos já usa. Os valores não são reproduzidos neste relatório.
+      <button class="more" style="color:#9C1C18" data-go="arquitetura/seguranca">Ver detalhes →</button>
+    </div>
+
+    <h3 class="h3">Estratégia em uma frase</h3>
+    <div class="callout">Entender melhor o cliente antes de transferir, resolver mais no bot o que é rotineiro e, quando houver transbordo, entregar a fila certa com contexto.</div>
+
+    <h3 class="h3">Hipóteses testadas</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Hipótese</th><th>Veredito</th><th>Evidência</th><th>Falta confirmar</th></tr></thead>
+        <tbody>
+          <tr><td>Tickets inativos ocupam vagas e geram fila</td><td><span class="badge b-amber">Provável</span></td><td><span class="src dados">Dados</span><span class="src fluxo">Fluxo</span> 55k tickets sem motivo ou inativos, ~25 min de TMA mediano e regra de fila baseada em 5 tickets por atendente.</td><td>Timeout do Desk; quantos tickets <code>null</code> nunca tiveram mensagem do cliente.</td></tr>
+          <tr><td>TME de ~9 s contradiz "a fila é o maior problema"</td><td><span class="badge b-gray">Em aberto</span></td><td><span class="src dados">Dados</span> Mediana de 0,13 a 0,20 min nas filas principais.</td><td>Definição exata do TME. A espera pode estar antes do ticket existir.</td></tr>
+          <tr><td>O bot favorece o transbordo</td><td><span class="badge b-red">Confirmado</span></td><td><span class="src fluxo">Fluxo</span> Saídas <code>input exists</code> levam ao humano em vários blocos; falha do Whitewall vai direto ao transbordo.</td><td>Volume por gatilho (evento <code>Transbordo:{{Equipe}}:{{Assunto}}</code>).</td></tr>
+          <tr><td>Abandono após o PDF é "já recebeu o que queria"</td><td><span class="badge b-amber">Plausível</span></td><td><span class="src dados">Dados</span> 81k "Falta de interação" no fim do envio de boletos.</td><td>Encerramento hoje é intencional? Há CTA de "algo mais"?</td></tr>
+          <tr><td>Inesperados altos indicam falta de clareza</td><td><span class="badge b-amber">Parcial</span></td><td><span class="src fluxo">Fluxo</span> Busca por substring ("sim" em "assim", "via" em "envia") e mensagem repetida de erro.</td><td>Amostra de textos livres para a taxonomia.</td></tr>
+          <tr><td>Consumo de tokens compromete a continuidade</td><td><span class="badge b-gray">Não verificável</span></td><td><span class="src infer">Inferência</span> Thread persistente por conversa e erro de IA vira transbordo.</td><td>Evento <code>White Wall Error</code> por status; custo por assistente.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="h3">Quick win recomendado</h3>
+    <div class="card" style="border-left:5px solid var(--color-positive)">
+      <span class="proposal-tag quickwin">Quick win · 3 semanas</span>
+      <h4 style="margin-top:10px">Classificador de intenção nas respostas aos templates de fatura e inadimplência</h4>
+      <p>Trocar a busca por palavras-chave por um agent do Studio que devolve um rótulo de intenção, mapeado para rotas que já existem. Substituir "a opção digitada não existe ❌" por botões. Adicionar retry e fallback quando a IA falha.</p>
+      <button class="more" data-go="evolucoes/ev-5">Ver proposta completa →</button>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 2: ESTUDOS ============ -->
+<section class="tab-panel" id="panel-estudos" role="tabpanel">
+  <div class="section">
+    <div class="sh"><div class="sh-num">2</div><div class="sh-eyebrow">Estudos e dados operacionais</div></div>
+    <h2 class="sh-title">O que os números dizem (jul a out/2026)</h2>
+    <p class="sh-lead">Dados do diagnóstico inicial e das telas de métricas do time. Passe o mouse (ou foque com o teclado) sobre as barras para ver os valores. Cada gráfico tem uma tabela equivalente.</p>
+    <nav class="toc" aria-label="Neste capítulo">
+      <a href="#ch-volume">Volume e TMA</a><a href="#ch-equipes">Equipes</a><a href="#ch-tags">Tags</a><a href="#ch-eventos">Jornada ativa</a><a href="#notificacoes">Notificações</a><a href="#correcoes">Correções de leitura</a><a href="#ticketmin">Ticket-minutos</a>
+    </nav>
+
+    <h3 class="h3" id="ch-volume">Volume de tickets e TMA por mês</h3>
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Tickets direcionados a atendentes</div>
+        <div class="chart-sub">Por mês · Out/26 é parcial · <span class="src dados">Dados do time</span></div>
+        <div id="chart-tickets"></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">TMA médio (minutos)</div>
+        <div class="chart-sub">Fica entre 34 e 43 min, com pico em setembro · <span class="src dados">Dados do time</span></div>
+        <div id="chart-tma"></div>
+      </div>
+    </div>
+
+    <h3 class="h3" id="ch-equipes">Tickets por equipe (set/26)</h3>
+    <div class="chart-card">
+      <div class="chart-sub">N1 e N3 somam 67.950 tickets, cerca de <strong>75%</strong> do total (o documento do time cita 78%; vale ajustar). <span class="src dados">Dados do time</span></div>
+      <div id="chart-equipes"></div>
+    </div>
+
+    <h3 class="h3" id="ch-tags">Tickets por tag (set/26)</h3>
+    <div class="chart-card">
+      <div class="legend"><span><i style="background:var(--bar-emph)"></i>Sem motivo registrado (<code>null</code>, Inatividade, Falta de interação)</span><span><i style="background:var(--bar-base)"></i>Com motivo de negócio</span></div>
+      <div class="chart-sub">Os 3 destaques somam ~58k tickets, cerca de <strong>64%</strong> dos ~91k do mês. Sem motivo, a triagem não deixa rastro do que o cliente queria. <span class="src dados">Dados do time</span></div>
+      <div id="chart-tags"></div>
+    </div>
+
+    <h3 class="h3" id="ch-eventos">Jornada ativa: eventos mais frequentes</h3>
+    <div class="chart-card">
+      <div class="chart-sub">Bot principal, jul a out. A jornada é dominada por faturamento e cobrança. <span class="src dados">Dados do time</span></div>
+      <div id="chart-eventos"></div>
+    </div>
+
+    <h3 class="h3" id="notificacoes">Notificações ativas</h3>
+    <div class="grid-3" style="margin-bottom:18px">
+      <div class="card"><div class="num-big">1,41M</div><p>disparos no período, com 95,8% de sucesso</p></div>
+      <div class="card"><div class="num-big">19,8%</div><p>de engajamento sobre as mensagens entregues (266.903 respostas)</p></div>
+      <div class="card"><div class="num-big">~85k</div><p>transbordos para atendimento humano no mesmo período</p></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title">Disparos com sucesso por mês</div>
+      <div class="chart-sub">O engajamento fica abaixo de cada barra. <span class="src dados">Dados do time</span></div>
+      <div id="chart-disparos"></div>
+    </div>
+
+    <h3 class="h3" id="correcoes">Correções de leitura: rótulo não é falha</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Sinal no diagnóstico</th><th>Como foi lido</th><th>O que o fluxo faz de fato</th><th>Consequência</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Respondeu fora do prazo</strong> (66k)</td><td>Quebra de jornada ou expiração</td><td><span class="src fluxo">Fluxo</span> Resposta mais de 24h após o template: o fluxo envia o cliente ao menu inicial.</td><td>Não é falha. Vale avaliar se o menu é o melhor destino.</td></tr>
+          <tr><td><strong>Input inesperado</strong> no template de fatura (57k)</td><td>Cliente não entende a mensagem</td><td><span class="src fluxo">Fluxo</span> É o rótulo de texto livre que não casou com palavra-chave. A rota é a IA FAQ.</td><td>Custo de tokens na FAQ; não é erro de jornada.</td></tr>
+          <tr><td><strong>Valida Resposta Inadimplência: Transbordo</strong> (53k)</td><td>53k transferências ao humano</td><td><span class="src fluxo">Fluxo</span> O rótulo "Transbordo" é aplicado a qualquer texto não reconhecido. O fluxo repete a mensagem de erro e transfere só após 3 tentativas.</td><td>O volume real de transbordo é menor; o problema é a re-pergunta.</td></tr>
+          <tr><td><strong>Tags Teste Chatbot / Resposta automática</strong> (780)</td><td>Ruído</td><td><span class="src dados">Dados</span> Tickets de teste em produção.</td><td>Filtrar das métricas.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="h3" id="ticketmin">Quanto custa um ticket "vazio"?</h3>
+    <div class="alert-box warning">
+      <strong>Cálculo (set/26):</strong> <code>null</code> 33.909 × 33,3 min + <code>Inatividade</code> 21.027 × 39,5 min ≈ <strong>1,96 milhão de ticket-minutos</strong> (~32,7k ticket-horas).<br>
+      Como cada atendente trabalha com ~5 tickets em paralelo, isso não são horas de atendente, e sim vagas ocupadas. <span class="src infer">Inferência</span> Parte desses tickets pode ser legítima, mas sem tag. Medir antes de fechar cedo (ver Pontos em aberto).
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 3: ARQUITETURA ============ -->
+<section class="tab-panel" id="panel-arquitetura" role="tabpanel">
+  <div class="section">
+    <div class="sh"><div class="sh-num">3</div><div class="sh-eyebrow">Arquitetura e diagnóstico de sustentação</div></div>
+    <h2 class="sh-title">Como o ecossistema Fit funciona hoje</h2>
+    <p class="sh-lead">Um roteador principal, subbots de IA e de processo, e dois fluxos de atendimento humano. Só esses dois chegam ao Desk. Os demais devolvem o controle ao Principal.</p>
+    <nav class="toc" aria-label="Neste capítulo">
+      <a href="#mapa">Mapa</a><a href="#inventario">Inventário</a><a href="#desk">Fila do Desk</a><a href="#whitewall">Whitewall</a><a href="#integracoes">Integrações</a><a href="#variaveis">Variáveis críticas</a><a href="#seguranca">Segurança e governança</a><a href="#resiliencia">Resiliência</a>
+    </nav>
+
+    <h3 class="h3" id="mapa">Mapa do ecossistema</h3>
+    <figure class="diagram">
+      <svg viewBox="0 0 1010 470" role="img" aria-label="Templates e clientes entram no Principal ou na Notificação iGreen, que acionam subbots de IA e processos; transbordos passam pelos fluxos de Atendimento até o Desk. A camada prdapis integra HubSpot, API Fit, Blip HTTP e Apps Script. Um bloco proposto do Studio fica entre o Principal e o Desk.">
+        <defs>
+          <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker>
+          <marker id="arb" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1E6BF1"/></marker>
+        </defs>
+        <g font-size="12" fill="currentColor">
+          <!-- entradas -->
+          <rect x="10" y="40" width="170" height="64" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="95" y="66" text-anchor="middle" font-weight="800">Template ativo (HSM)</text><text x="95" y="86" text-anchor="middle" font-size="11" opacity=".7">1,41M disparos</text>
+          <rect x="10" y="190" width="170" height="64" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="95" y="216" text-anchor="middle" font-weight="800">Cliente receptivo</text><text x="95" y="236" text-anchor="middle" font-size="11" opacity=".7">menu e texto livre</text>
+          <!-- notificacao e principal -->
+          <rect x="240" y="40" width="190" height="64" rx="10" fill="#EAF1FF" stroke="#1E6BF1"/>
+          <text x="335" y="66" text-anchor="middle" font-weight="800">Notificação iGreen</text><text x="335" y="86" text-anchor="middle" font-size="11" opacity=".75">respostas a HSM · 125 blocos</text>
+          <rect x="240" y="180" width="190" height="84" rx="10" fill="#EAF1FF" stroke="#1E6BF1" stroke-width="2"/>
+          <text x="335" y="210" text-anchor="middle" font-weight="800">Principal (roteador)</text><text x="335" y="230" text-anchor="middle" font-size="11" opacity=".75">menu · 2ª via · cancelamento</text><text x="335" y="246" text-anchor="middle" font-size="11" opacity=".75">129 blocos · 157 scripts</text>
+          <!-- subbots -->
+          <rect x="510" y="30" width="220" height="116" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="620" y="54" text-anchor="middle" font-weight="800">Subbots de IA (Whitewall)</text>
+          <text x="620" y="76" text-anchor="middle" font-size="11" opacity=".8">FAQ · Dúvidas fatura</text>
+          <text x="620" y="94" text-anchor="middle" font-size="11" opacity=".8">Falta de energia · Devolução</text>
+          <text x="620" y="112" text-anchor="middle" font-size="11" opacity=".8">Troca solicitada · Troca concluída</text>
+          <text x="620" y="130" text-anchor="middle" font-size="11" opacity=".8">Cancelamento (limbo)</text>
+          <rect x="510" y="190" width="220" height="64" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="620" y="216" text-anchor="middle" font-weight="800">Processos</text><text x="620" y="236" text-anchor="middle" font-size="11" opacity=".8">Autoleitura · Inadimplência · NPS</text>
+          <!-- atendimento -->
+          <rect x="790" y="40" width="210" height="84" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="895" y="68" text-anchor="middle" font-weight="800">Atendimento (CS e Vendas)</text><text x="895" y="88" text-anchor="middle" font-size="11" opacity=".8">únicos fluxos com Desk</text><text x="895" y="104" text-anchor="middle" font-size="11" opacity=".8">ticket no HubSpot</text>
+          <rect x="790" y="190" width="210" height="64" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="895" y="216" text-anchor="middle" font-weight="800">Desk (filas)</text><text x="895" y="236" text-anchor="middle" font-size="11" opacity=".8">Auxiliares → N3 → N4 → Default</text>
+          <!-- studio -->
+          <rect x="240" y="300" width="760" height="46" rx="10" fill="#EAF7FF" stroke="#1E6BF1" stroke-dasharray="6 4" stroke-width="1.6"/>
+          <text x="620" y="320" text-anchor="middle" font-weight="800" fill="#052F91">Studio (proposto): classificador de intenção · triagem de transbordo · orquestrador FAQ</text>
+          <text x="620" y="337" text-anchor="middle" font-size="11" fill="#052F91" opacity=".85">decide a intenção e o resumo; o Builder executa rotas, retry, filas e Desk</text>
+          <!-- apis -->
+          <rect x="240" y="390" width="300" height="60" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="390" y="414" text-anchor="middle" font-weight="800">prdapis (camada de integração)</text><text x="390" y="432" text-anchor="middle" font-size="11" opacity=".8">69 chamadas · chamada via Redirect</text>
+          <rect x="610" y="390" width="390" height="60" rx="10" fill="#fff" stroke="currentColor" stroke-opacity=".5"/>
+          <text x="805" y="414" text-anchor="middle" font-weight="800">HubSpot · API Fit · Blip HTTP · Apps Script</text><text x="805" y="432" text-anchor="middle" font-size="11" opacity=".8">credenciais em texto em ~94 pontos</text>
+        </g>
+        <g stroke="currentColor" fill="none" stroke-width="1.6" marker-end="url(#ar)" font-size="11">
+          <path d="M180,72 H240"/><path d="M180,222 H240"/><path d="M335,104 V180"/>
+          <path d="M430,205 H470 V88 H510"/><path d="M430,232 H510"/>
+          <path d="M430,196 H470 V164 H770 V100 H790"/>
+          <path d="M895,124 V190"/>
+          <path d="M540,420 H610"/>
+        </g>
+        <path d="M335,264 V300" stroke="#1E6BF1" stroke-width="1.8" stroke-dasharray="5 4" fill="none" marker-end="url(#arb)"/>
+        <path d="M895,300 V256" stroke="#1E6BF1" stroke-width="1.8" stroke-dasharray="5 4" fill="none" marker-end="url(#arb)"/>
+        <g font-size="11" fill="currentColor" opacity=".85">
+          <text x="210" y="64" text-anchor="middle">resposta</text>
+          <text x="345" y="148">transbordo / menu</text>
+          <text x="540" y="160">infoAtendimento (Equipe, Assunto)</text>
+          <text x="905" y="162">ForwardToDesk</text>
+          <text x="345" y="286" fill="#052F91">intenção</text>
+          <text x="905" y="282" fill="#052F91">resumo + fila</text>
+          <text x="575" y="414" text-anchor="middle">HTTP</text>
+        </g>
+      </svg>
+      <figcaption>Os subbots devolvem o controle ao Principal com <code>msgretorno</code> (por exemplo <code>redirect: atendimento</code>); o Principal decide a fila a partir de <code>Equipe</code> e <code>Assunto</code>. Em azul tracejado, o ponto onde os agents do Studio entrariam.</figcaption>
+    </figure>
+
+    <h3 class="h3" id="inventario">Inventário dos 15 fluxos</h3>
+    <div class="toolbar">
+      <input class="search" id="inv-search" type="search" placeholder="Filtrar por nome ou papel..." aria-label="Filtrar fluxos">
+      <button class="chip" data-inv="all" aria-pressed="true">Todos</button>
+      <button class="chip" data-inv="IA" aria-pressed="false">Agents de IA</button>
+      <button class="chip" data-inv="Desk" aria-pressed="false">Com Desk</button>
+      <button class="chip" data-inv="Risco" aria-pressed="false">Com credencial exposta</button>
+    </div>
+    <div class="table-wrap">
+      <table id="inv-table">
+        <thead><tr><th>Fluxo</th><th>Papel</th><th class="num">Blocos</th><th class="num">Scripts</th><th class="num">HTTP</th><th class="num">Tracking</th><th>IA</th><th class="num">Sem ref.</th><th class="num">Credenciais</th></tr></thead>
+        <tbody></tbody>
+        <tfoot></tfoot>
+      </table>
+    </div>
+    <p style="font-size:12px;color:var(--color-content-ghost);margin-top:8px">"Tracking" conta ações de <code>TrackEvent</code> no desenho, não eventos disparados. "Sem ref." são blocos sem referência explícita; nos fluxos de notificação, vários (<code>Fila:</code>, <code>Fluxo:</code>) parecem ser acessados por fora, então não os tratamos como código morto. "Credenciais" é o número de ocorrências detectadas por padrão, sem reproduzir valores.</p>
+
+    <h3 class="h3" id="desk">Como o bot decide a fila do Desk</h3>
+    <div class="grid-2">
+      <div class="card">
+        <h4>Escalonamento (<code>Muda fila CS</code>)</h4>
+        <div class="cascade"><span class="step">Auxiliares</span><span class="arrow">→</span><span class="step chk">Analistas</span><span class="arrow">→</span><span class="step">Atendimento N3</span><span class="arrow">→</span><span class="step chk">Atendimento N4</span><span class="arrow">→</span><span class="step">Default</span></div>
+        <div class="cascade"><span class="step">Ativação</span><span class="arrow">→</span><span class="step">Auxiliares</span> &nbsp; <span class="step chk">12x36</span><span class="arrow">→</span><span class="step">N3</span></div>
+        <div class="cascade"><span class="step">Inadimplência N1</span><span class="arrow">→</span><span class="step chk">Inadimplência N2</span><span class="arrow">→</span><span class="step">Auxiliares</span></div>
+        <div class="cascade"><span class="step chk">NPS</span><span class="arrow">→</span><span class="step chk">Premium</span><span class="arrow">→</span><span class="step chk">Premium N2</span><span class="arrow">→</span><span class="step">Auxiliares</span></div>
+        <p style="font-size:12px;color:var(--color-content-ghost)">Contorno azul: equipes em que o bot checa fila de espera antes de entrar. As demais entram direto no Desk.</p>
+      </div>
+      <div class="card">
+        <h4>Regras codificadas</h4>
+        <ul>
+          <li><span class="src fluxo">Fluxo</span> "Tem fila" se há ticket aguardando ou se tickets abertos ÷ atendentes online ≥ <strong>5</strong>.</li>
+          <li><span class="src fluxo">Fluxo</span> A checagem só escala as equipes Analistas, N4, 12x36, Inadimplência N2, NPS, Premium e Premium N2.</li>
+          <li><span class="src fluxo">Fluxo</span> Acima de <strong>100</strong> clientes na fila (exceto Falta de energia), o cliente escolhe entrar na fila, voltar mais tarde ou abrir ticket (HubSpot, retorno em até 48h).</li>
+          <li><span class="src fluxo">Fluxo</span> Sem atendente disponível (<code>NoAgentAvailable</code>), a fila sobe pela cascata.</li>
+          <li><span class="src fluxo">Fluxo</span> Transferência direta a atendente (<code>Equipe</code> com e-mail): capacidade padrão de 5 tickets; se cheio ou offline, cai para fila.</li>
+        </ul>
+        <p style="margin-top:8px"><span class="src infer">Inferência</span> Auxiliares e N3, que concentram ~75% dos tickets, não passam por checagem de fila.</p>
+      </div>
+    </div>
+
+    <h3 class="h3" id="whitewall">O que é "Whitewall" nos fluxos</h3>
+    <div class="card">
+      <p>Nome que usamos para a integração de IA que <strong>já existe</strong> nos fluxos. Nos blocos aparece como <code>[IA] Whitewall</code>, com <code>$whiteWallIntegration</code> do tipo <code>chatgpt</code>.</p>
+      <div class="grid-2" style="margin-top:12px">
+        <div class="proposal-box solution"><strong>Comprovado no JSON</strong><ul>
+          <li>Chamada HTTP a <code>ww-blip-plugins.cloudfunctions.net/chatgpt_chatAssistant</code></li>
+          <li>Envia ID do assistente (<code>assistant_ww_...</code>), chave pública do bucket do bot e ID da conversa (thread)</li>
+          <li>A resposta vem como texto ou como "skill" (<code>segunda_via</code>, <code>atendimento_humano</code>...), usada para rotear</li>
+          <li>Erros registrados no evento <code>White Wall Error</code></li></ul></div>
+        <div class="proposal-box problem"><strong>Inferência, a validar</strong><ul>
+          <li>É um plugin do Builder que usa assistentes da OpenAI com histórico por thread</li>
+          <li>Modelo e instruções reais ficam no assistente; <code>gpt-3.5-turbo</code> e "só falo de carros" no bloco são resto de template</li>
+          <li>Sem log por chamada no fluxo, o custo de tokens não é visível</li></ul></div>
+      </div>
+    </div>
+
+    <h3 class="h3" id="integracoes">Integrações mapeadas (~222 chamadas)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Destino</th><th class="num">Chamadas</th><th>Uso</th><th>Criticidade</th><th>Tratamento de erro</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Blip HTTP</strong> (<code>/messages</code>, <code>/commands</code>)</td><td class="num">93</td><td>E-mail de exceção, regras e métricas do Desk, histórico de threads</td><td><span class="badge b-red">Crítica</span></td><td>Parcial: alertas por e-mail a 2 pessoas</td></tr>
+          <tr><td><strong>HubSpot</strong> (<code>config.hubspotUrl</code> e API direta)</td><td class="num">~59</td><td>Contatos, tickets, negócios, owners</td><td><span class="badge b-red">Crítica</span></td><td>Parcial: erro vira e-mail e segue</td></tr>
+          <tr><td><strong>Whitewall / OpenAI</strong></td><td class="num">16</td><td>IA conversacional, áudio (TTS), análise de foto</td><td><span class="badge b-red">Crítica</span></td><td>Ausente: falha vira transbordo</td></tr>
+          <tr><td><strong>API Fit</strong> (<code>config.url</code>, <code>fitenergia.com.br</code>, <code>api-ops</code>)</td><td class="num">~17</td><td>Dados do cliente, faturas, leitura, falta de energia, documentos</td><td><span class="badge b-red">Crítica</span></td><td>Parcial: status ≠ 200 transborda</td></tr>
+          <tr><td><strong>Google Apps Script</strong></td><td class="num">8</td><td>Registro de transbordo em planilha</td><td><span class="badge b-amber">Média</span></td><td>Sem tratamento</td></tr>
+          <tr><td><strong>QA / ViaCEP</strong></td><td class="num">2</td><td><code>config.urlQa</code> e <code>qa.fitservicos...</code> referenciados em produção; busca de CEP</td><td><span class="badge b-amber">Média</span></td><td>Revisar</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="h3" id="variaveis">Variáveis críticas (não remover)</h3>
+    <div class="alert-box danger">
+      <strong>Risco de quebra do bot se removidas ou renomeadas:</strong><br>
+      1. <code>contact.extras.Equipe</code> e <code>contact.extras.Assunto</code>: definem a fila do Desk e alimentam as tags e os eventos <code>Transbordo</code>.<br>
+      2. <code>msgretorno</code> e <code>jsonRedirect</code>: contrato de retorno e de contexto entre subbots e o Principal.<br>
+      3. <code>infoAtendimento</code>: payload do transbordo (nome, CPF, e-mail, UC, Equipe, Assunto, campos do flow de falta de energia).<br>
+      4. <code>roteamento</code> e <code>nomeTemplate</code>: dão o destino das respostas a HSM.<br>
+      5. <code>contagemIa</code> e <code>contagemAtendente</code>: limites de 4 turnos de IA e 3 pedidos de atendente.<br>
+      6. <code>wwthread</code>, <code>wwassistant</code>, <code>wwlastassistant</code>: continuidade da conversa de IA.<br>
+      7. <code>{{config.*}}</code> (<code>hubspotUrl</code>, <code>url</code>, <code>urlQa</code>, <code>Authorization</code>): os valores reais não estão no JSON e devem ser conferidos no painel.
+    </div>
+
+    <h3 class="h3" id="seguranca">Segurança e governança</h3>
+    <div class="alert-box danger">
+      <strong>Credenciais em texto puro (~94 ocorrências):</strong> chave de autorização da API Blip repetida em dezenas de blocos, bearers do HubSpot, bearer da API da Fit e token fixo do webhook do Apps Script. Há também uso correto de <code>{{config.*}}</code> em outros blocos, o que mostra que a migração é viável. Tratar os arquivos exportados como sensíveis e rotacionar as chaves.
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Tema</th><th>Achado</th><th>Risco</th><th>Recomendação</th></tr></thead>
+        <tbody>
+          <tr><td>PII em tracking</td><td>Eventos "Detalhado" gravam telefone e texto livre do cliente; o <code>prdapis</code> grava o corpo completo das respostas das APIs</td><td><span class="badge b-red">Alto</span></td><td>Mascarar ou remover PII dos eventos</td></tr>
+          <tr><td>LGPD</td><td>Não há aceite de privacidade nem opt-out nos JSONs. "LGPD" só aparece em mensagens sobre recusa de titularidade</td><td><span class="badge b-amber">A confirmar</span></td><td>Verificar se o aceite está no opt-in do template, fora do fluxo</td></tr>
+          <tr><td>Teste em produção</td><td>Bloco <code>[QA] Abertura de torneira</code>, <code>Fila: Teste Chatbot</code>, número de telefone fixo no roteamento do Principal, 436 tickets "Teste Chatbot"</td><td><span class="badge b-amber">Médio</span></td><td>Isolar em ambiente de teste e filtrar das métricas</td></tr>
+          <tr><td>Alertas</td><td>Exceções vão por e-mail a duas pessoas, com identidade do contato no corpo</td><td><span class="badge b-amber">Médio</span></td><td>Canal ou lista compartilhada e dados mínimos</td></tr>
+          <tr><td>Observabilidade</td><td>Categorias de tracking caíram de 782 para 651; a IA Cancelamento usa a categoria "Falta de Energia"</td><td><span class="badge b-amber">Médio</span></td><td>Padronizar nomes e o campo de motivo do transbordo</td></tr>
+          <tr><td>Duplicação</td><td>6 subbots de IA com o mesmo esqueleto (16 a 22 scripts cada)</td><td><span class="badge b-blue">Sustentação</span></td><td>Consolidar em orquestrador e especialistas (Studio)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="h3" id="resiliencia">Mapa de resiliência</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Ponto de falha</th><th>Hoje</th><th>Nível</th></tr></thead>
+        <tbody>
+          <tr><td>Whitewall com erro ou sem resposta</td><td>Vai direto para <code>Transbordo</code>, sem retry nem mensagem de contingência</td><td><span class="badge b-red">Ausente</span></td></tr>
+          <tr><td>API Fit com 500 ou status ≠ 200</td><td>Transborda para Auxiliares ("Sistema fora do ar")</td><td><span class="badge b-amber">Parcial</span></td></tr>
+          <tr><td>Busca do último template (inadimplência)</td><td>Olha só as últimas 20 mensagens (<code>$take=20</code>); se não achar, transborda. No fluxo HSM o limite é 100</td><td><span class="badge b-red">Frágil</span></td></tr>
+          <tr><td>Input inesperado</td><td>Mensagem repetida "a opção digitada não existe ❌"; teto de 2 a 3 repetições, depois humano</td><td><span class="badge b-amber">Parcial</span></td></tr>
+          <tr><td>Retorno não mapeado de subbot</td><td>Saída <code>input exists</code> leva ao humano</td><td><span class="badge b-amber">Parcial</span></td></tr>
+          <tr><td>Resposta da FAQ com a palavra "cancelamento"</td><td>Desvia para o subbot de Cancelamento, mesmo que seja só explicação</td><td><span class="badge b-red">Misroute</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 4: TRANSBORDO ============ -->
+<section class="tab-panel" id="panel-transbordo" role="tabpanel">
+  <div class="section">
+    <div class="sh"><div class="sh-num">4</div><div class="sh-eyebrow">Transbordo e triagem</div></div>
+    <h2 class="sh-title">Por que o cliente vai para o humano e como triar melhor</h2>
+    <p class="sh-lead">Dos 8 motivos abaixo, a maior parte nasce do desenho do fluxo. Só ~40% dos tickets têm tag, então a divisão real entre legítimo e evitável precisa ser medida. A tabela mostra onde olhar, não a proporção exata.</p>
+    <nav class="toc" aria-label="Neste capítulo">
+      <a href="#motivos">Motivos</a><a href="#gatilhos">Gatilhos por subbot</a><a href="#triagem">Campos de triagem</a><a href="#decisao">Decisões do agent</a><a href="#analisar">O que analisar</a>
+    </nav>
+
+    <h3 class="h3" id="motivos">Principais motivos de transbordo</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Motivo</th><th>Como acontece no fluxo</th><th>Evidência</th><th>Natureza</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>Resposta a template não entendida</strong></td><td>Palavra-chave; se não casa, repete "a opção não existe" e transfere, ou joga na IA FAQ</td><td>57k "inesperado" (vão à FAQ); 53k rótulo "transbordo" na inadimplência</td><td><span class="badge b-green">Evitável</span></td></tr>
+          <tr><td>2</td><td><strong>Saída padrão para humano</strong></td><td>Retorno não mapeado, 3 pedidos de atendente, "Não" em "Consegui te ajudar?", qualquer resposta na IA Cancelamento</td><td>Desenho dos blocos</td><td><span class="badge b-green">Evitável em parte</span></td></tr>
+          <tr><td>3</td><td><strong>Falha técnica</strong></td><td>Erro do Whitewall, API 500, fatura sem arquivo, erro ao escolher UC</td><td>Desenho dos blocos; volume a confirmar</td><td><span class="badge b-green">Evitável</span></td></tr>
+          <tr><td>4</td><td><strong>Regra de negócio</strong></td><td>Mais de 8 faturas (2ª via), mais de 9 (dúvidas), mais de 18 UCs, status "Acompanhamento GD", "Aguardando confirmação para iniciar troca", cliente premium</td><td>Regras no Principal</td><td><span class="badge b-amber">Parte revisável</span></td></tr>
+          <tr><td>5</td><td><strong>Pedido explícito</strong></td><td>"Outros assuntos", "Alterar cadastro" (direto), Reclamação/Ouvidoria</td><td>Desenho dos blocos</td><td><span class="badge b-blue">Legítimo</span> (cadastro pode ter autosserviço)</td></tr>
+          <tr><td>6</td><td><strong>Falta de energia</strong></td><td>IA transfere após 4 interações, previsão excedida ou caso sensível</td><td>~5,1k tickets de acompanhamento; fluxo humano mais previsível (TMA 23 a 30 min)</td><td><span class="badge b-green">Evitável em parte</span></td></tr>
+          <tr><td>7</td><td><strong>Titularidade e cancelamento</strong></td><td>Skills estorno, cancelamento, prazo expirado, cadastrar e contrato sempre transferem</td><td>~5,1k tickets de titularidade; ~2,1k de cancelamento/reversão; TMA mediano 39 a 50 min</td><td><span class="badge b-blue">Legítimo</span> (coleta prévia possível)</td></tr>
+          <tr><td>8</td><td><strong>Retorno ao atendimento</strong></td><td>Cliente volta após inatividade e vira "Retomada" ou "Ticket em aberto"</td><td>~31k "Falta de interação" nessa etapa</td><td><span class="badge b-green">Evitável</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="h3" id="gatilhos">Gatilhos de transbordo por subbot</h3>
+    <details class="acc"><summary>IA FAQ</summary><div class="acc-body"><ul><li>Skills <code>atendimento_humano</code> e <code>estorno</code></li><li>3 ou mais pedidos de atendente</li><li>Erro do Whitewall (sem resultado nem skill)</li><li>"Não" ou resposta diferente de "Sim" em "Consegui te ajudar?" após 4 turnos</li></ul></div></details>
+    <details class="acc"><summary>IA Dúvidas Fatura</summary><div class="acc-body"><ul><li>Responde com os dados da fatura as skills <code>taxa_disponibilidade</code>, <code>aumento_consumo</code>, <code>iluminacao_publica</code> e <code>valor_conta</code>; sem dados da fatura (<code>semFatura</code>), transborda</li><li>Skill <code>atendimento_humano</code> e 3 pedidos de atendente</li></ul></div></details>
+    <details class="acc"><summary>IA Falta de energia</summary><div class="acc-body"><ul><li>Skills <code>atendimento_humano</code> e <code>saude</code>; caso sensível</li><li>Previsão de retorno excedida</li><li>4 interações sem resolver; "Não" na validação do app</li></ul></div></details>
+    <details class="acc"><summary>IA Cancelamento (limbo)</summary><div class="acc-body"><ul><li>Só reengaja: até 4 tentativas, janela de 24h e das 8h às 22h</li><li><strong>Qualquer resposta</strong> do usuário vai para o humano</li></ul></div></details>
+    <details class="acc"><summary>IA Troca solicitada, Troca concluída e Devolução</summary><div class="acc-body"><ul><li>Skills <code>estorno</code>, <code>cancelamento</code>, <code>atendimento_humano</code>, <code>prazo_expirado</code>, <code>cadastrar</code>, <code>contrato</code></li><li>3 ou mais pedidos de atendente; erro do Whitewall; "Consegui te ajudar?" ≠ Sim</li></ul></div></details>
+    <details class="acc"><summary>Autoleitura</summary><div class="acc-body"><ul><li>API <code>/autoleitura</code> ≠ 200; 3 leituras inválidas; 3 inputs inesperados</li><li>Foto do medidor passa por IA sem validação do formato devolvido</li></ul></div></details>
+    <details class="acc"><summary>Inadimplência e Notificação iGreen</summary><div class="acc-body"><ul><li>Erro de API, 2 inputs inesperados, "atend"/"humano", data de pagamento informada, 3 formatos inválidos de comprovante</li><li>Respostas a HSM com "Falar", "Sim", "Podemos", "Preciso de ajuda", "Não reconheço essa adesão", "agendar reunião"</li><li>Template de vendas e documentos seguem para <code>randomizar vendedor</code> (Vendas)</li></ul></div></details>
+
+    <h3 class="h3" id="triagem">Campos de triagem a adicionar</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Campo</th><th>Valores / origem</th><th>Para quê</th></tr></thead>
+        <tbody>
+          <tr><td><code>motivo</code></td><td>Taxonomia única alinhada às tags do Desk (<em>Solicitação, Dúvidas, Contato ativo, Erro</em> + tema)</td><td>Fim dos tickets sem motivo; fila correta</td></tr>
+          <tr><td><code>motivo_transbordo</code></td><td>pedido do usuário · regra de negócio · falha técnica · saída padrão · limite de tentativas · decisão da IA</td><td>Separa demanda legítima de fallback; torna o plano mensurável</td></tr>
+          <tr><td><code>origem</code></td><td>Template (qual) ou receptivo; router FIT ou iGreen</td><td>Prioridade e contexto</td></tr>
+          <tr><td><code>perfil</code></td><td>Premium, inadimplente, nº de UCs e faturas, status da UC</td><td>Roteamento e autosserviço por regra</td></tr>
+          <tr><td><code>urgencia</code></td><td>Caso sensível (saúde), falta de energia prolongada</td><td>Escalada prioritária</td></tr>
+          <tr><td><code>tentativas_bot</code></td><td>Quantas vezes o bot tentou e o que ofereceu</td><td>Evita repetir a mesma pergunta ao cliente</td></tr>
+          <tr><td><code>resumo</code></td><td>Duas linhas geradas por agent do Studio ou pelo Blip Copilot</td><td>Reduz tempo de descoberta do atendente</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3 class="h3" id="decisao">Três decisões possíveis do agent de triagem</h3>
+    <div class="grid-3">
+      <div class="card"><span class="badge b-green">1</span><h4 style="margin-top:8px">Autoatender</h4><p>Intenção é rotineira e há dados (2ª via, comprovante, status de energia). O bot resolve e pergunta "algo mais?".</p></div>
+      <div class="card"><span class="badge b-blue">2</span><h4 style="margin-top:8px">Transferir com contexto</h4><p>Exige humano. Define fila pela taxonomia, grava <code>motivo</code> e <code>resumo</code> e preenche <code>Assunto</code> correto.</p></div>
+      <div class="card"><span class="badge b-red">3</span><h4 style="margin-top:8px">Escalar prioritário</h4><p>Caso sensível ou cliente premium. Vai à fila prioritária com sinalização para o atendente.</p></div>
+    </div>
+
+    <h3 class="h3" id="analisar">O que analisar para refinar a triagem</h3>
+    <div class="card">
+      <ul>
+        <li>Distribuição real dos motivos, depois de preencher o campo <code>motivo</code>.</li>
+        <li>Quanto do transbordo é falha técnica versus pedido legítimo.</li>
+        <li>Textos livres que hoje caem como "inesperado" (amostra para a taxonomia do classificador).</li>
+        <li>Quais limites (8 faturas, 9 faturas, 18 UCs) ainda fazem sentido.</li>
+        <li>Quais jornadas terminam em resolução rápida no humano (candidatas a automação).</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 5: EVOLUÇÕES ============ -->
+<section class="tab-panel" id="panel-evolucoes" role="tabpanel">
+  <div class="section">
+    <div class="sh"><div class="sh-num">5</div><div class="sh-eyebrow">Plano de evolução</div></div>
+    <h2 class="sh-title">Matriz de priorização e propostas</h2>
+    <p class="sh-lead">Premissa: qualquer agent novo é construído no <strong>Studio da Blip</strong>. O Builder segue responsável por rotas, retry, filas e Desk. Clique em um item da matriz para ir direto à proposta.</p>
+    <nav class="toc" aria-label="Neste capítulo">
+      <a href="#matriz">Matriz</a><a href="#simulacao">Antes e depois</a><a href="#propostas">Propostas</a><a href="#roadmap">Roadmap</a><a href="#studio">Premissas do Studio</a>
+    </nav>
+
+    <h3 class="h3" id="matriz">Matriz impacto × esforço</h3>
+    <div class="matrix-container">
+      <div class="matrix-grid">
+        <div class="mq" style="background:rgba(0,180,90,.04)">
+          <div class="mq-tag" style="color:var(--color-positive)">Priorizar (quick wins)</div>
+          <div class="mq-nodes">
+            <button class="mnode" data-go="evolucoes/ev-1"><div class="mcircle c-quick">#1</div><div class="l">Rotacionar credenciais</div><div class="s">risco</div></button>
+            <button class="mnode" data-go="evolucoes/ev-2"><div class="mcircle c-quick">#2</div><div class="l">Medir antes de mudar</div><div class="s">semana 1</div></button>
+            <button class="mnode" data-go="evolucoes/ev-3"><div class="mcircle c-quick">#3</div><div class="l">Tickets de inatividade</div><div class="s">fila</div></button>
+            <button class="mnode" data-go="evolucoes/ev-4"><div class="mcircle c-quick">#4</div><div class="l">Whitewall: retry</div><div class="s">continuidade</div></button>
+            <button class="mnode" data-go="evolucoes/ev-5"><div class="mcircle c-quick">#5</div><div class="l">Classificador de intenção</div><div class="s">quick win</div></button>
+            <button class="mnode" data-go="evolucoes/ev-6"><div class="mcircle c-quick">#6</div><div class="l">Tracking e desvio</div><div class="s">mensuração</div></button>
+          </div>
+        </div>
+        <div class="mq" style="background:rgba(30,107,241,.04)">
+          <div class="mq-tag" style="color:var(--color-primary)">Planejar</div>
+          <div class="mq-nodes">
+            <button class="mnode" data-go="evolucoes/ev-8"><div class="mcircle c-plan">#8</div><div class="l">Agent de triagem</div><div class="s">30 a 60 dias</div></button>
+            <button class="mnode" data-go="evolucoes/ev-9"><div class="mcircle c-plan">#9</div><div class="l">FAQ multiagente</div><div class="s">60 a 90 dias</div></button>
+            <button class="mnode" data-go="evolucoes/ev-10"><div class="mcircle c-plan">#10</div><div class="l">Governança e LGPD</div><div class="s">paralelo</div></button>
+            <button class="mnode" data-go="evolucoes/ev-11"><div class="mcircle c-plan">#11</div><div class="l">Resumo para o atendente</div><div class="s">Copilot ou Studio</div></button>
+          </div>
+        </div>
+        <div class="mq" style="background:rgba(255,152,0,.04)">
+          <div class="mq-tag" style="color:#9A4A00">Oportunista</div>
+          <div class="mq-nodes">
+            <button class="mnode" data-go="evolucoes/ev-7"><div class="mcircle c-op">#7</div><div class="l">Checagem de fila em todas as equipes</div><div class="s">depende da operação</div></button>
+          </div>
+        </div>
+        <div class="mq" style="background:rgba(120,120,120,.04)">
+          <div class="mq-tag" style="color:#555">Evitar por agora</div>
+          <div class="mq-nodes">
+            <button class="mnode" style="cursor:default"><div class="mcircle c-no">Big bang</div><div class="l">Reescrever o Principal (129 blocos) de uma vez</div><div class="s">estrangular por partes</div></button>
+            <button class="mnode" style="cursor:default"><div class="mcircle c-no">Tudo</div><div class="l">Migrar todos os subbots ao Studio junto</div><div class="s">provar o classificador antes</div></button>
+          </div>
+        </div>
+      </div>
+      <div class="matrix-axis"><span>← BAIXO ESFORÇO</span><span>ALTO ESFORÇO →</span></div>
+    </div>
+
+    <h3 class="h3" id="simulacao">Quick win: antes e depois (ilustração)</h3>
+    <p class="sh-lead" style="margin-bottom:14px">A mensagem de erro do "antes" existe no fluxo. A fala do cliente e a resposta do "depois" são um exemplo do comportamento proposto.</p>
+    <div class="chat-preview-wrap">
+      <div class="chat-box">
+        <div class="chat-title before"><span>❌ Hoje (palavra-chave)</span><span class="badge b-red">3 re-perguntas</span></div>
+        <div class="bub">Olá! Sua fatura venceu. Escolha uma opção abaixo.</div>
+        <div class="bub user">paguei ontem pelo pix</div>
+        <div class="bub">Desculpe, mas a opção digitada não existe! ❌</div>
+        <div class="bub user">já paguei, olha o comprovante</div>
+        <div class="bub">Desculpe, mas a opção digitada não foi encontrada! 😐</div>
+        <div class="bub" style="opacity:.8">… após a 3ª tentativa, transfere para o atendente.</div>
+      </div>
+      <div class="chat-box" style="background:#DDEFE0">
+        <div class="chat-title after"><span>✅ Proposto (classificador)</span><span class="badge b-green">resolve no bot</span></div>
+        <div class="bub">Olá! Sua fatura venceu. Escolha uma opção abaixo.</div>
+        <div class="bub user">paguei ontem pelo pix</div>
+        <div class="bub">Obrigado por avisar! Se já tiver o comprovante, pode enviar por aqui para registrarmos o pagamento.
+          <div class="btns"><span>Enviar comprovante</span><span>2ª via da fatura</span><span>Falar com atendente</span></div>
+        </div>
+        <div class="bub user">[comprovante.pdf]</div>
+        <div class="bub">Recebi! Vamos confirmar seu pagamento. Posso ajudar em mais alguma coisa?</div>
+      </div>
+    </div>
+
+    <h3 class="h3" id="propostas">Propostas detalhadas</h3>
+
+    <article class="proposal-card" id="ev-1">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">1</span>Rotacionar credenciais expostas</div><span class="proposal-tag gov">Segurança · imediato</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>~94 ocorrências de credenciais em texto puro nos exports (API Blip, HubSpot, API Fit, Apps Script). Os arquivos circulam entre times e consultorias.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Inventariar, gerar novas chaves e substituir por <code>{{config.*}}</code>, padrão que parte dos blocos já usa. Tratar os JSONs atuais como sensíveis.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Risco de segurança e de LGPD cai de "exposto" para "controlado". Não move métrica operacional.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Baixo (1 a 2 dias + janela)</div><div><strong>Risco</strong>A rotação quebra blocos com valor fixo; testar</div><div><strong>Sucesso</strong>Zero credencial em texto no export</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-2">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">2</span>Medir antes de mudar</div><span class="proposal-tag quickwin">Quick win · semana 1</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>Três leituras do diagnóstico eram rótulos e a hipótese central da fila ainda não tem o dado de inatividade por ticket.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Painel com 5 números: tickets mortos, falhas do Whitewall por status, transbordo por motivo, fila por hora e custo por conversa de IA.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Evita resolver o problema errado numa janela curta e dá números do próprio cliente para as decisões seguintes.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Baixo</div><div><strong>Depende de</strong>Acesso ao tracking e ao Desk</div><div><strong>Sucesso</strong>Painel validado com o time</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-3">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">3</span>Atacar tickets de inatividade</div><span class="proposal-tag quickwin">Quick win</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>~55k tickets/mês são <code>null</code> ou <code>Inatividade</code> (TMA mediano ~25 min). Contam como ocupação na regra de fila.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Fechar mais cedo o ticket em que o cliente nunca respondeu (5 a 8 min), pedir uma frase de motivo antes de abrir o ticket e aproveitar a <em>Prioridade retomada atendimento</em> que já existe.</div>
+        <div class="proposal-box gains"><strong>Ganho (cenário)</strong>Metade dos tickets realmente sem resposta e fechamento de ~25 para ~8 min libera ~470k ticket-minutos/mês (~7,8k h), cerca de 13% do total estimado. Ver Simulador.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Baixo a médio</div><div><strong>Risco</strong>WhatsApp é assíncrono; fechar cedo demais gera reabertura</div><div><strong>Sucesso</strong>Menos tickets sem resposta do cliente, menor TMA mediano, menor ocupação por atendente</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-4">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">4</span>Whitewall: retry e fallback antes de transbordar</div><span class="proposal-tag quickwin">Quick win</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>Erro da IA e transbordo são o mesmo caminho. Se houver estouro de cota em picos, todas as conversas de IA caem no humano de uma vez.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Em status ≠ 200, tentar de novo uma vez; se falhar, oferecer botões (sem IA) e só transferir após 2 falhas. Alertar por canal compartilhado.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Proporcional ao nº de falhas (evento <code>White Wall Error</code>). Se houver estouro de cota, é a recuperação mais barata do plano; se for zero, é resiliência.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Baixo</div><div><strong>Risco</strong>Baixo, mudança local</div><div><strong>Sucesso</strong>Queda de transbordos originados em erro de IA</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-5" style="border-left:5px solid var(--color-positive)">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">5</span>Classificador de intenção nas respostas a templates</div><span class="proposal-tag quickwin">Quick win recomendado · 3 semanas</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>Busca por substring ("sim" casa com "assim", "via" com "envia"), re-pergunta com a mesma mensagem e texto livre indo à FAQ completa (57k eventos no template de fatura).</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Agent do Studio sem histórico devolve só um rótulo: <code>segunda_via</code>, <code>ja_paguei</code>, <code>negociar</code>, <code>area_cliente</code>, <code>agradecimento</code>, <code>atendente</code>, <code>outro</code>. Cada rótulo aponta para uma rota existente; "outro" vai à FAQ com contexto do template. Casos óbvios (botões, "pix", anexos) seguem por regra. Em vez do erro repetido, 3 botões.<br><br><strong>Onde:</strong> <code>[HSM] Valida resposta</code>, <code>[Inadimplência] Valida resposta</code> e seus blocos de input inesperado, no fluxo <code>prdnotificacaoigreen</code>.</div>
+        <div class="proposal-box solution" style="background:#F1F6FF"><strong>Em paralelo (blindagem)</strong><ul><li>Retry e botões quando a IA falha</li><li>Remover o desvio da FAQ para Cancelamento por palavra</li><li>Subir <code>$take=20</code> para 100 na busca do último template</li></ul></div>
+        <div class="proposal-box solution" style="background:#F1F6FF"><strong>Rollout sem risco</strong><ul><li>Semana 1: construir e testar com ~50 frases reais do tracking existente</li><li>Semana 2: ~20% dos contatos (final do <code>contact.identity</code>)</li><li>Semana 3: 100% se bater a meta; rollback desligando a divisão</li></ul></div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Menos misroute e re-pergunta, menos tokens (texto livre deixa de ir à FAQ completa) e melhor experiência. Ordem de grandeza ilustrativa: evitar 10% dos ~85k transbordos são ~8,5k tickets/mês, ~5,7k horas a 40 min cada.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Médio (1 builder, 2 a 3 semanas)</div><div><strong>Risco</strong>Falso positivo em "já paguei" ou "contestar": testar com frases reais e limiar de confiança</div><div><strong>Sucesso</strong>Transbordo por resposta a template, % resolvido sem humano, tokens por conversa, re-perguntas por conversa</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-6">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">6</span>Corrigir tracking e o desvio de "cancelamento"</div><span class="proposal-tag quickwin">Quick win</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>Rótulos de tracking se misturam com eventos reais, a IA Cancelamento usa a categoria "Falta de Energia" e os eventos "Detalhado" gravam PII.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Padronizar o campo <code>motivo_transbordo</code>, corrigir a categoria, remover PII dos eventos e eliminar o desvio por palavra "cancelamento" na FAQ.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Todo número do plano passa a ser confiável; menos misroute para cancelamento.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Baixo</div><div><strong>Risco</strong>Baixo</div><div><strong>Sucesso</strong>Relatório de transbordo por motivo fecha com o volume do Desk</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-7">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">7</span>Checagem de fila em todas as equipes</div><span class="proposal-tag ux">Oportunista</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>Só 7 equipes passam pela checagem. Auxiliares e N3 (~75% dos tickets) entram direto no Desk.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Aplicar a regra a todas, antecipar "voltar mais tarde" ou "abrir ticket" antes do limite fixo de 100 e parametrizar <code>agentSlots</code>.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Menos abandono na fila e carga redistribuída.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Baixo</div><div><strong>Risco</strong>A cascata pode empurrar carga para níveis mais caros; alinhar com a operação</div><div><strong>Sucesso</strong>Menos tickets fechados pelo cliente antes do atendimento</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-8">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">8</span>Agent de triagem do transbordo (Studio)</div><span class="proposal-tag arch">Arquitetura · 30 a 60 dias</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>A fila é herdada de menus e padrões ("Auxiliares" como default). Transferências internas são 16% a 22% dos fechamentos e o atendente recomeça a conversa.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Uma pergunta aberta de motivo; o agent classifica em <code>Assunto</code>/<code>Equipe</code>, tenta autoatendimento quando possível e entrega um resumo com os dados já coletados (UC, faturas, status).</div>
+        <div class="proposal-box gains"><strong>Ganho (cenário)</strong>Transferências internas são ~14,6k a ~20,1k tickets/mês. Cortar pela metade evita ~7,3k a ~10k tickets reprocessados; a ~30 min cada, ~3,7k a ~5k horas/mês. Há ganho adicional de TMA por menos descoberta.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Alto</div><div><strong>Depende de</strong>Itens #2 e #6, regras de transbordo validadas</div><div><strong>Sucesso</strong>Queda de transferências internas e de TMA, com precisão acima do limiar acordado</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-9">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">9</span>FAQ multiagente: orquestrador + especialistas (Studio)</div><span class="proposal-tag arch">Arquitetura · 60 a 90 dias</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>6 subbots de IA clonados (16 a 22 scripts cada), com skills repetidas (<code>segunda_via</code>, <code>falta_energia</code>, <code>cancelamento</code>).</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Orquestrador e especialistas (fatura, falta de energia, titularidade, cancelamento) com guardrails compartilhados e modelo mais barato no roteamento.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Uma correção deixa de ser repetida 6 vezes, custo por especialista menor e qualidade mais consistente.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Alto</div><div><strong>Risco</strong>Só vale depois de saber o volume real da FAQ; senão vira complexidade</div><div><strong>Sucesso</strong>Tokens por conversa resolvida e taxa de resolução por especialista</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-10">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">10</span>Governança e LGPD</div><span class="proposal-tag gov">Governança · paralelo</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>Aceite de privacidade e opt-out não aparecem nos fluxos; há blocos de teste e endpoints de QA em produção e alertas por e-mail pessoal.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Confirmar onde está o aceite, remover QA e teste de produção, trocar alertas por lista compartilhada e documentar as variáveis críticas.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Menos risco regulatório e operacional, e sustentação por mais de uma pessoa.</div>
+        <div class="proposal-box meta"><div><strong>Esforço</strong>Médio</div><div><strong>Depende de</strong>Cliente confirmar o que vive fora do fluxo</div><div><strong>Sucesso</strong>Checklist de governança zerado</div></div>
+      </div>
+    </article>
+
+    <article class="proposal-card" id="ev-11" style="border-left:5px solid var(--color-brand)">
+      <div class="proposal-header"><div class="proposal-title"><span class="proposal-number">11</span>Resumo da conversa para o atendente (Blip Copilot)</div><span class="proposal-tag oferta">Oferta Blip · a validar</span></div>
+      <div class="proposal-grid">
+        <div class="proposal-box problem"><strong>Problema</strong>O atendente recebe o ticket e recomeça a conversa. Os tickets têm TMA médio de 34 a 43 min, com parte gasta em descoberta.</div>
+        <div class="proposal-box solution"><strong>Solução</strong>Usar o <strong>Blip Copilot</strong> para resumir a conversa e apoiar o atendente no Desk, como alternativa ou complemento ao resumo gerado pelo agent de triagem do Studio.</div>
+        <div class="proposal-box gains"><strong>Ganho</strong>Menor tempo de descoberta, melhor experiência para o cliente (não repete a história) e uma oferta adicional de produto para a conta.</div>
+        <div class="proposal-box meta"><div><strong>Ponto em aberto</strong>Não sabemos se a Fit usa ou tem licença do Blip Copilot</div><div><strong>Validar</strong>Escopo do produto, licenciamento e integração com o Desk e o Studio</div><div><strong>Sucesso</strong>Queda de TMA em tickets com resumo, medida contra o grupo sem resumo</div></div>
+      </div>
+    </article>
+
+    <h3 class="h3" id="roadmap">Roadmap sugerido</h3>
+    <div class="roadmap">
+      <div class="rm-col"><div class="rm-head rm-1">Primeiros 30 dias<small>medir e blindar</small></div><ul>
+        <li data-go="evolucoes/ev-1"><b>Sem. 1</b> · #1 Rotacionar credenciais</li>
+        <li data-go="evolucoes/ev-2"><b>Sem. 1</b> · #2 Painel de medição</li>
+        <li data-go="evolucoes/ev-4"><b>Sem. 2</b> · #4 Retry do Whitewall</li>
+        <li data-go="evolucoes/ev-6"><b>Sem. 2</b> · #6 Tracking e desvio</li>
+        <li data-go="evolucoes/ev-3"><b>Sem. 2-3</b> · #3 Tickets de inatividade</li>
+        <li data-go="evolucoes/ev-5"><b>Sem. 1-3</b> · #5 Classificador (quick win)</li>
+        <li data-go="evolucoes/ev-7"><b>Sem. 4</b> · #7 Checagem de fila</li>
+      </ul></div>
+      <div class="rm-col"><div class="rm-head rm-2">30 a 60 dias<small>triagem e contexto</small></div><ul>
+        <li data-go="evolucoes/ev-8"><b>#8</b> Agent de triagem no Studio</li>
+        <li data-go="evolucoes/ev-11"><b>#11</b> Resumo para o atendente</li>
+        <li data-go="transbordo/motivos">Autosserviço de status (falta de energia, GD)</li>
+        <li data-go="transbordo/motivos">Pré-coleta de documentos em titularidade</li>
+      </ul></div>
+      <div class="rm-col"><div class="rm-head rm-3">60 a 90 dias<small>consolidar</small></div><ul>
+        <li data-go="evolucoes/ev-9"><b>#9</b> FAQ multiagente</li>
+        <li data-go="evolucoes/ev-10"><b>#10</b> Governança e LGPD</li>
+        <li>Estrangular o Principal por partes</li>
+      </ul></div>
+    </div>
+
+    <h3 class="h3" id="studio">Premissas e validações do Studio</h3>
+    <div class="alert-box warning">
+      Não há nada do Studio nos JSONs, então não afirmamos o que ele suporta. Antes de fechar a especificação, validar: como o Builder chama o agent (bloco nativo ou API) e o tempo de resposta; se há log por chamada e custo de tokens por agent; se o agent chama as APIs (HubSpot, API Fit) como ferramenta; e como é o handoff para o Desk e o tratamento de erro.
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 6: SIMULADOR ============ -->
+<section class="tab-panel" id="panel-simulador" role="tabpanel">
+  <div class="section">
+    <div class="sh"><div class="sh-num">6</div><div class="sh-eyebrow">Simulador de impacto</div></div>
+    <h2 class="sh-title">Quanta capacidade as melhorias podem liberar</h2>
+    <p class="sh-lead">Cenários ilustrativos para apoiar a conversa, não previsões. Os valores iniciais vêm dos dados do time (setembro) e todas as premissas são editáveis.</p>
+
+    <h3 class="h3">A. Transbordos evitados (classificador e triagem)</h3>
+    <div class="sim-box">
+      <div class="sim-grid">
+        <div><label for="a-vol">Transbordos por mês</label><input class="sim-input" id="a-vol" type="number" value="85000" min="0"></div>
+        <div><label for="a-pct">% evitado</label><div class="range-val"><span id="a-pct-v">10</span>%</div><input id="a-pct" type="range" min="0" max="40" value="10"></div>
+        <div><label for="a-tma">Minutos por ticket evitado</label><input class="sim-input" id="a-tma" type="number" value="40" min="1"></div>
+        <div><label for="a-custo">Custo por hora do atendimento (opcional, R$)</label><input class="sim-input" id="a-custo" type="number" placeholder="ex.: 35" min="0"></div>
+      </div>
+      <div class="recap-kpis">
+        <div><div class="recap-kpi-value" id="a-tickets">0</div><div class="recap-kpi-label">Tickets evitados / mês</div></div>
+        <div><div class="recap-kpi-value" id="a-horas">0</div><div class="recap-kpi-label">Horas liberadas / mês</div><div class="recap-kpi-sub" id="a-share"></div></div>
+        <div><div class="recap-kpi-value" id="a-reais">n/d</div><div class="recap-kpi-label">Equivalente em R$ / mês</div></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Cenário</th><th class="num">% evitado</th><th class="num">Tickets / mês</th><th class="num">Horas / mês</th></tr></thead>
+        <tbody id="a-cenarios"></tbody>
+      </table>
+    </div>
+
+    <h3 class="h3">B. Tickets sem resposta do cliente (inatividade)</h3>
+    <div class="sim-box">
+      <div class="sim-grid">
+        <div><label for="b-n">Tickets <code>null</code> + Inatividade / mês</label><input class="sim-input" id="b-n" type="number" value="54936" min="0"></div>
+        <div><label for="b-pct">% realmente sem resposta do cliente</label><div class="range-val"><span id="b-pct-v">50</span>%</div><input id="b-pct" type="range" min="0" max="100" value="50"></div>
+        <div><label for="b-atual">Minutos até fechar hoje</label><input class="sim-input" id="b-atual" type="number" value="25" min="1"></div>
+        <div><label for="b-novo">Minutos até fechar (proposto)</label><input class="sim-input" id="b-novo" type="number" value="8" min="1"></div>
+        <div><label for="b-total">Total de ticket-horas do mês (estimado)</label><input class="sim-input" id="b-total" type="number" value="61026" min="1"></div>
+      </div>
+      <div class="recap-kpis">
+        <div><div class="recap-kpi-value" id="b-horas">0</div><div class="recap-kpi-label">Ticket-horas liberadas / mês</div></div>
+        <div><div class="recap-kpi-value" id="b-share">0%</div><div class="recap-kpi-label">do total estimado</div><div class="recap-kpi-sub">91.539 tickets × ~40 min ÷ 60</div></div>
+      </div>
+    </div>
+    <div class="alert-box warning">
+      <strong>Como ler:</strong> ticket-hora não é hora de atendente. Cada atendente atende cerca de 5 tickets ao mesmo tempo, então o ganho aparece como vagas liberadas (menos fila), e não como horas pagas economizadas. A premissa de "% realmente sem resposta" é desconhecida e é o primeiro número a medir (ponto em aberto).
+    </div>
+  </div>
+</section>
+
+<!-- ============ TAB 7: ABERTOS ============ -->
+<section class="tab-panel" id="panel-abertos" role="tabpanel">
+  <div class="section">
+    <div class="sh"><div class="sh-num">7</div><div class="sh-eyebrow">Pontos em aberto</div></div>
+    <h2 class="sh-title">O que ainda precisa ser refinado</h2>
+    <p class="sh-lead">Itens que não vimos nos JSONs ou nos dados. Marque os que forem resolvidos; o progresso fica salvo neste navegador. O quick win (#5) não depende dos itens marcados como "fase 2".</p>
+    <nav class="toc" aria-label="Neste capítulo">
+      <a href="#validacoes">Validações técnicas</a><a href="#decisoes">Decisões do cliente</a><a href="#premissas">Premissas adotadas</a><a href="#perguntas">Perguntas para a reunião</a><a href="#glossario">Glossário</a>
+    </nav>
+
+    <div class="progress-card">
+      <div><div class="num-big" id="prog-num">0/0</div><div style="font-size:12px;color:var(--color-content-ghost);margin-top:4px">itens resolvidos</div></div>
+      <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="prog-bar-wrap"><div id="prog-bar"></div></div>
+      <button class="btn ghost" id="reset-open">Limpar marcações</button>
+    </div>
+
+    <h3 class="h3" id="validacoes">Validações técnicas pendentes</h3>
+    <div id="list-val"></div>
+
+    <h3 class="h3" id="decisoes">Decisões e confirmações do cliente</h3>
+    <div id="list-dec"></div>
+
+    <h3 class="h3" id="premissas">Premissas que adotamos</h3>
+    <div class="card">
+      <ul>
+        <li>Os dados do diagnóstico do time (jul a out/2026, out parcial) são corretos e comparáveis às telas de métricas de setembro.</li>
+        <li>A tela de tags corresponde a setembro (o período não está explícito).</li>
+        <li>Todo agent novo será construído no Studio da Blip.</li>
+        <li>O aceite de privacidade pode existir no opt-in dos templates, fora dos fluxos.</li>
+        <li>Os valores de <code>{{config.*}}</code> não estão nos exports e podem divergir do que está em produção.</li>
+        <li>Os cenários do simulador usam 40 min por ticket e 5 tickets simultâneos por atendente como ordem de grandeza.</li>
+      </ul>
+    </div>
+
+    <h3 class="h3" id="perguntas">Perguntas contextualizadas para a reunião</h3>
+    <div class="toolbar" id="q-toolbar"></div>
+    <div class="toolbar">
+      <input class="search" id="q-search" type="search" placeholder="Buscar pergunta..." aria-label="Buscar pergunta">
+      <button class="btn" id="copy-prio">Copiar prioritárias</button>
+      <button class="btn ghost" id="copy-all">Copiar visíveis</button>
+    </div>
+    <div id="list-q"></div>
+
+    <h3 class="h3" id="glossario">Glossário</h3>
+    <details class="acc"><summary>Termos usados neste relatório</summary><div class="acc-body"><ul>
+      <li><strong>Transbordo:</strong> passagem do cliente do bot para atendimento humano.</li>
+      <li><strong>Desk:</strong> ferramenta de atendimento humano da Blip, com filas (equipes) e atendentes.</li>
+      <li><strong>HSM / template:</strong> mensagem ativa aprovada pela Meta, enviada pela empresa.</li>
+      <li><strong>Whitewall:</strong> integração de IA presente nos fluxos (ver capítulo 3).</li>
+      <li><strong>Studio:</strong> plataforma da Blip para construir agents de IA.</li>
+      <li><strong>Blip Copilot:</strong> produto da Blip de apoio ao atendimento; escopo e licenciamento a validar.</li>
+      <li><strong>UC:</strong> unidade consumidora.</li>
+      <li><strong>TME / TMA:</strong> tempo médio de espera / de atendimento.</li>
+      <li><strong>Ticket-minuto:</strong> minutos em que um ticket permanece aberto; não equivale a horas de atendente.</li>
+    </ul></div></details>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-action">
+    <strong>Próximos passos:</strong> rotacionar as credenciais, montar o painel de medição, validar com o cliente os 2 principais motivos de contato e iniciar o quick win do classificador de intenção no Studio.
+  </div>
+  <div class="footer-date">Outubro 2026 · Fit Energia · Blip</div>
+</footer>
+</div>
+
+<button class="to-top" id="to-top" aria-label="Voltar ao topo">↑</button>
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ---------- utilidades ---------- */
+const $ = (s, r=document) => r.querySelector(s);
+const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+const fmt = n => Number(n).toLocaleString('pt-BR');
+const tip = $('#tip');
+function showTip(html, x, y){
+  tip.innerHTML = html; tip.classList.add('on');
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  tip.style.left = Math.max(8, Math.min(x + 14, window.innerWidth - w - 8)) + 'px';
+  tip.style.top = Math.max(8, Math.min(y + 14, window.innerHeight - h - 8)) + 'px';
+}
+function hideTip(){ tip.classList.remove('on'); }
+function toast(msg){ const t = $('#toast'); t.textContent = msg; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'), 2200); }
+function store(key, val){ try{ if(val === undefined) return JSON.parse(localStorage.getItem(key)); localStorage.setItem(key, JSON.stringify(val)); }catch(e){ return null; } }
+
+/* ---------- navegação ---------- */
+const TABS = ['resumo','estudos','arquitetura','transbordo','evolucoes','simulador','abertos'];
+function showTab(id, opts={}){
+  if(!TABS.includes(id)) id = 'resumo';
+  $$('.nav-tab').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === id ? 'true' : 'false'));
+  $$('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + id));
+  const tabBtn = $('.nav-tab[data-tab="'+id+'"]');
+  if(tabBtn) tabBtn.scrollIntoView({inline:'center', block:'nearest'});
+  if(!opts.noHash){ try{ history.replaceState(null, '', '#' + id + (opts.anchor ? '/' + opts.anchor : '')); }catch(e){ /* iframe sandbox (srcdoc): segue sem atualizar a URL */ } }
+  if(opts.anchor){
+    const el = document.getElementById(opts.anchor);
+    if(el){ setTimeout(()=>{ el.scrollIntoView({behavior:'smooth', block:'start'}); flash(el); }, 60); return; }
+  }
+  if(!opts.keepScroll){ window.scrollTo({top: $('.header').offsetHeight, behavior:'auto'}); }
+}
+function flash(el){
+  if(!el.classList.contains('proposal-card')) return;
+  el.classList.add('flash'); setTimeout(()=>el.classList.remove('flash'), 2600);
+}
+function go(target){ const [tab, anchor] = target.split('/'); showTab(tab, {anchor}); }
+function routeFromHash(){
+  let h = '';
+  try{ h = location.hash.replace('#',''); }catch(e){}
+  if(!h) return showTab('resumo', {noHash:true, keepScroll:true});
+  const [tab, anchor] = h.split('/');
+  if(TABS.includes(tab)) showTab(tab, {anchor, noHash:true, keepScroll:!anchor});
+  else { showTab('resumo', {noHash:true, keepScroll:true}); const el = document.getElementById(h); if(el) el.scrollIntoView(); }
+}
+$$('.nav-tab').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+$$('.nav-tab').forEach((t, i, all) => t.addEventListener('keydown', e => {
+  if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+    const n = all[(i + (e.key === 'ArrowRight' ? 1 : all.length - 1)) % all.length]; n.focus(); showTab(n.dataset.tab, {keepScroll:true});
+  }
+}));
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-go]'); if(g){ e.preventDefault(); go(g.dataset.go); return; }
+  const a = e.target.closest('.toc a'); if(a){ e.preventDefault(); const el = document.getElementById(a.getAttribute('href').slice(1)); if(el) el.scrollIntoView({behavior:'smooth', block:'start'}); }
+});
+try{ window.addEventListener('hashchange', routeFromHash); }catch(e){}
+const toTop = $('#to-top');
+window.addEventListener('scroll', () => toTop.classList.toggle('on', window.scrollY > 700), {passive:true});
+toTop.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+
+/* ---------- gráficos ---------- */
+function hbars(id, rows, opts={}){
+  const host = document.getElementById(id); const max = Math.max(...rows.map(r => r.v));
+  const unit = opts.unit || '';
+  let html = '';
+  rows.forEach((r, i) => {
+    html += `<div class="hbar-row" tabindex="0" data-i="${i}" role="img" aria-label="${r.l}: ${fmt(r.v)}${unit}">
+      <div class="hbar-label">${r.l}${r.s ? '<small>'+r.s+'</small>' : ''}</div>
+      <div class="hbar-track"><div class="hbar-fill ${r.e ? 'emph' : ''}" style="width:${(r.v/max*100).toFixed(1)}%"></div></div>
+      <div class="hbar-val">${fmt(r.v)}${unit}</div></div>`;
+  });
+  html += `<details><summary>Ver como tabela</summary><table><thead><tr><th>Item</th><th>Valor</th>${rows[0].s !== undefined ? '<th>Detalhe</th>' : ''}</tr></thead><tbody>` +
+    rows.map(r => `<tr><td>${r.l}</td><td>${fmt(r.v)}${unit}</td>${r.s !== undefined ? '<td>'+(r.s||'')+'</td>' : ''}</tr>`).join('') + `</tbody></table></details>`;
+  host.innerHTML = html;
+  $$('.hbar-row', host).forEach(el => {
+    const r = rows[+el.dataset.i];
+    const content = `<strong>${r.l}</strong><br>${fmt(r.v)}${unit}${r.s ? '<br>'+r.s : ''}`;
+    el.addEventListener('mousemove', ev => showTip(content, ev.clientX, ev.clientY));
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('focus', () => { const b = el.getBoundingClientRect(); showTip(content, b.left + 80, b.top); });
+    el.addEventListener('blur', hideTip);
+  });
+}
+function columns(id, data, o={}){
+  const host = document.getElementById(id);
+  const W = 520, H = 230, L = 46, R = 10, T = 22, B = 46;
+  const max = o.max || Math.max(...data.map(d => d.v)) * 1.12;
+  const iw = W - L - R, ih = H - T - B, bw = Math.min(54, iw / data.length * .55), step = iw / data.length;
+  const ticks = 4; let g = '';
+  for(let i = 0; i <= ticks; i++){
+    const y = T + ih - ih * i / ticks, val = max * i / ticks;
+    g += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="currentColor" stroke-opacity="${i?0.1:0.35}"/><text x="${L-8}" y="${y+4}" text-anchor="end" font-size="10.5" fill="currentColor" opacity=".65">${o.axis ? o.axis(val) : fmt(Math.round(val))}</text>`;
+  }
+  let bars = '';
+  data.forEach((d, i) => {
+    const h = ih * d.v / max, x = L + step * i + (step - bw) / 2, y = T + ih - h;
+    const col = d.partial ? 'url(#hatch-'+id+')' : 'var(--bar-base)';
+    bars += `<g class="col" tabindex="0" data-i="${i}" role="img" aria-label="${d.l}: ${o.val ? o.val(d.v) : fmt(d.v)}">
+      <rect x="${x}" y="${T}" width="${bw}" height="${ih}" fill="transparent"/>
+      <path d="M${x},${T+ih} V${y+4} Q${x},${y} ${x+4},${y} H${x+bw-4} Q${x+bw},${y} ${x+bw},${y+4} V${T+ih} Z" fill="${col}" ${d.partial ? 'stroke="var(--bar-base)"' : ''}/>
+      <text x="${x+bw/2}" y="${y-6}" text-anchor="middle" font-size="11" font-weight="700" fill="currentColor">${o.val ? o.val(d.v) : fmt(d.v)}</text>
+      <text x="${x+bw/2}" y="${T+ih+17}" text-anchor="middle" font-size="11" fill="currentColor">${d.l}</text>
+      ${d.s ? `<text x="${x+bw/2}" y="${T+ih+32}" text-anchor="middle" font-size="10.5" fill="currentColor" opacity=".7">${d.s}</text>` : ''}
+    </g>`;
+  });
+  host.innerHTML = `<svg class="cols" viewBox="0 0 ${W} ${H}" role="img" aria-label="${o.label}"><defs><pattern id="hatch-${id}" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="6" height="6" fill="#fff"/><rect width="2.5" height="6" fill="var(--bar-base)"/></pattern></defs>${g}${bars}</svg>
+  <details><summary>Ver como tabela</summary><table><thead><tr><th>Período</th><th>Valor</th><th>Nota</th></tr></thead><tbody>${data.map(d => `<tr><td>${d.l}</td><td>${o.val ? o.val(d.v) : fmt(d.v)}</td><td>${d.s || (d.partial ? 'mês parcial' : '')}</td></tr>`).join('')}</tbody></table></details>`;
+  $$('.col', host).forEach(el => {
+    const d = data[+el.dataset.i];
+    const content = `<strong>${d.l}</strong><br>${o.val ? o.val(d.v) : fmt(d.v)}${d.s ? '<br>'+d.s : ''}${d.partial ? '<br>mês parcial' : ''}`;
+    el.addEventListener('mousemove', ev => showTip(content, ev.clientX, ev.clientY));
+    el.addEventListener('mouseleave', hideTip);
+    el.addEventListener('focus', () => { const b = el.getBoundingClientRect(); showTip(content, b.left, b.top); });
+    el.addEventListener('blur', hideTip);
+  });
+}
+columns('chart-tickets', [
+  {l:'Jul/26', v:64231}, {l:'Ago/26', v:72818}, {l:'Set/26', v:91539, s:'+43% vs. jul'}, {l:'Out/26*', v:23414, partial:true}
+], {label:'Tickets por mês de julho a outubro de 2026'});
+columns('chart-tma', [
+  {l:'Jul/26', v:39.3}, {l:'Ago/26', v:34.2}, {l:'Set/26', v:43.1}, {l:'Out/26*', v:42.0, partial:true}
+], {label:'TMA médio por mês em minutos', max:50, val:v => v.toFixed(1).replace('.',',') + ' min', axis:v => Math.round(v)});
+hbars('chart-equipes', [
+  {l:'Atendimento N1', v:43525, s:'TMA mediano 25,3 min'}, {l:'Atendimento N3', v:24425, s:'TMA mediano 31,7 min'},
+  {l:'Inadimplência N1', v:9723, s:'TMA mediano 25,3 min'}, {l:'Falta de Energia', v:4392, s:'TMA mediano 23,8 min'},
+  {l:'DIRECT_TRANSFER', v:4284, s:'TMA mediano 28,2 min · média 67,4 min'}, {l:'Ativação', v:1310, s:'TMA mediano 46,9 min'},
+  {l:'Premium', v:840, s:'TMA mediano 43,7 min'}, {l:'Atendimento N2 BackOffice', v:780, s:'TMA mediano 32,4 min'},
+  {l:'Inadimplência N2', v:689, s:'TMA mediano 78,7 min · média 176,4 min'}, {l:'Atendimento N4', v:468, s:'TMA mediano 35,7 min'},
+  {l:'Default', v:301, s:'TMA mediano 23,3 min'}, {l:'Premium N2', v:157, s:'TMA mediano 30,2 min'},
+  {l:'NPS', v:128, s:'TMA mediano 193,8 min · média 254,0 min'}, {l:'Vendas', v:65, s:'sem TMA'}
+]);
+hbars('chart-tags', [
+  {l:'(sem tag)', v:33941, e:true, s:'TMA mediano 21,2 min'}, {l:'Inatividade', v:21027, e:true, s:'TMA mediano 25,4 min'},
+  {l:'Falta de energia: acompanhamento', v:5098, s:'TMA mediano 23,4 min'}, {l:'Contato ativo: negociação de inadimplência', v:5002, s:'TMA mediano 23,9 min'},
+  {l:'Erro: falta de interação', v:3161, e:true, s:'TMA mediano 24,3 min'}, {l:'Solicitação: devolução da titularidade', v:2959, s:'TMA mediano 46,1 min'},
+  {l:'Dúvidas: 1ª fatura', v:2421, s:'TMA mediano 34,4 min'}, {l:'Dúvidas: cancelamento', v:1798, s:'TMA mediano 42,7 min'},
+  {l:'Dúvidas: 2ª via', v:1528, s:'TMA mediano 34,7 min'}, {l:'Solicitação: 2ª via', v:1323, s:'TMA mediano 29,3 min'},
+  {l:'Dúvidas: devolução da titularidade', v:946, s:'TMA mediano 39,1 min'}, {l:'Solicitação: negociação de pagamento', v:626, s:'TMA mediano 29,1 min'},
+  {l:'Dúvidas: troca de titularidade', v:588, s:'TMA mediano 36,3 min'}, {l:'Solicitação: estorno', v:541, s:'TMA mediano 60,6 min · média 92,1 min'}
+]);
+hbars('chart-eventos', [
+  {l:'2ª via: envia fatura em aberto', v:121955}, {l:'Transbordo: Auxiliares', v:85731, e:true},
+  {l:'Fim do envio dos boletos: falta de interação', v:81260}, {l:'Template de fatura: respondeu fora do prazo', v:65856},
+  {l:'Template de fatura: input inesperado', v:57454}, {l:'Valida inadimplência: transbordo (rótulo)', v:52857, e:true},
+  {l:'Fim do envio dos boletos: PIX', v:45761}, {l:'Fim do envio dos boletos: ver código PIX', v:45720},
+  {l:'2ª via: não possui faturas em aberto', v:45630}, {l:'Valida inadimplência: envia boleto', v:44186}
+]);
+columns('chart-disparos', [
+  {l:'Jul/26', v:306574, s:'21,5% · falhas 4,2%'}, {l:'Ago/26', v:428837, s:'19,7% · falhas 4,5%'}, {l:'Set/26', v:491032, s:'18,8% · falhas 4,0%'}, {l:'Out/26*', v:124424, s:'19,3% · falhas 3,8%', partial:true}
+], {label:'Disparos com sucesso por mês; engajamento e falhas sob cada barra'});
+
+/* ---------- inventário ---------- */
+const INV = [
+  ['fitenergiaprincipal','Roteador principal (menu, 2ª via, cancelamento)',129,157,26,101,'Imagem',3,21,false],
+  ['prdnotificacaoigreen','Respostas a templates (HSM)',125,134,21,69,'-',29,13,false],
+  ['prdapis','Camada de integração (APIs)',69,58,69,212,'-',0,16,false],
+  ['atendimento638375755099600986','Atendimento humano CS (Desk)',31,30,29,20,'-',0,17,true],
+  ['prdiafaltadeenergia','Agent de IA: falta de energia',30,22,12,27,'Sim',3,6,false],
+  ['prdiafaq','Agent de IA: FAQ',25,17,7,29,'Sim',0,1,false],
+  ['prdiaduvidasfatura','Agent de IA: dúvidas de fatura',23,17,6,24,'Sim',1,0,false],
+  ['prdiadevolucaotitularidad','Agent de IA: devolução de titularidade',23,18,6,24,'Sim',0,0,false],
+  ['prdiatrocaconcluida','Agent de IA: troca concluída',22,16,7,26,'Sim',0,1,false],
+  ['prdinadimplencia','Cobrança (inadimplência)',22,23,8,23,'Data',0,4,false],
+  ['prdiatrocasolicitada','Agent de IA: troca solicitada',21,16,6,23,'Sim',1,0,false],
+  ['prdatendimentovendas1','Atendimento Vendas (Desk)',20,4,12,5,'-',0,9,true],
+  ['prdnps','CSAT / NPS',16,10,2,18,'-',0,2,false],
+  ['prdautoleitura','Autoleitura (texto ou foto)',15,10,5,11,'Foto',0,2,false],
+  ['prdiacancelamento','Agent de IA: limbo de cancelamento (reengajamento)',13,9,6,7,'Sim',1,2,false]
+];
+let invFilter = 'all';
+function renderInv(){
+  const q = ($('#inv-search').value || '').toLowerCase();
+  const rows = INV.filter(r => {
+    if(q && !(r[0] + ' ' + r[1]).toLowerCase().includes(q)) return false;
+    if(invFilter === 'IA') return r[6] === 'Sim';
+    if(invFilter === 'Desk') return r[9];
+    if(invFilter === 'Risco') return r[8] > 0;
+    return true;
+  });
+  $('#inv-table tbody').innerHTML = rows.map(r => `<tr><td><code>${r[0]}</code></td><td>${r[1]}${r[9] ? ' <span class="badge b-blue">Desk</span>' : ''}</td><td class="num">${r[2]}</td><td class="num">${r[3]}</td><td class="num">${r[4]}</td><td class="num">${r[5]}</td><td>${r[6] === '-' ? '-' : '<span class="badge b-blue">'+r[6]+'</span>'}</td><td class="num">${r[7]}</td><td class="num">${r[8] ? '<span class="badge b-red">'+r[8]+'</span>' : '0'}</td></tr>`).join('') || '<tr><td colspan="9">Nenhum fluxo encontrado.</td></tr>';
+  const s = i => rows.reduce((a, r) => a + r[i], 0);
+  $('#inv-table tfoot').innerHTML = `<tr class="total-row"><td>Total (${rows.length} fluxos)</td><td></td><td class="num">${s(2)}</td><td class="num">${s(3)}</td><td class="num">${s(4)}</td><td class="num">${s(5)}</td><td></td><td class="num">${s(7)}</td><td class="num">${s(8)}</td></tr>`;
+}
+$('#inv-search').addEventListener('input', renderInv);
+$$('[data-inv]').forEach(b => b.addEventListener('click', () => { invFilter = b.dataset.inv; $$('[data-inv]').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); renderInv(); }));
+renderInv();
+
+/* ---------- simulador ---------- */
+function simA(){
+  const vol = +$('#a-vol').value || 0, pct = +$('#a-pct').value, tma = +$('#a-tma').value || 0, custo = parseFloat($('#a-custo').value);
+  $('#a-pct-v').textContent = pct;
+  const t = vol * pct / 100, h = t * tma / 60;
+  $('#a-tickets').textContent = fmt(Math.round(t));
+  $('#a-horas').textContent = fmt(Math.round(h));
+  $('#a-share').textContent = 'ticket-horas, ' + (91539 ? (t / 91539 * 100).toFixed(1).replace('.',',') : 0) + '% dos tickets de set/26';
+  $('#a-reais').textContent = isNaN(custo) ? 'n/d' : (h * custo).toLocaleString('pt-BR', {style:'currency', currency:'BRL', maximumFractionDigits:0});
+  $('#a-cenarios').innerHTML = [['Conservador',5],['Moderado',10],['Agressivo',20]].map(([n,p]) => {
+    const tt = vol * p / 100; return `<tr><td><strong>${n}</strong></td><td class="num">${p}%</td><td class="num">${fmt(Math.round(tt))}</td><td class="num">${fmt(Math.round(tt * tma / 60))}</td></tr>`;
+  }).join('');
+}
+function simB(){
+  const n = +$('#b-n').value || 0, pct = +$('#b-pct').value, at = +$('#b-atual').value || 0, nv = +$('#b-novo').value || 0, tot = +$('#b-total').value || 1;
+  $('#b-pct-v').textContent = pct;
+  const h = n * (pct / 100) * Math.max(0, at - nv) / 60;
+  $('#b-horas').textContent = fmt(Math.round(h));
+  $('#b-share').textContent = (h / tot * 100).toFixed(1).replace('.',',') + '%';
+}
+['a-vol','a-pct','a-tma','a-custo'].forEach(i => $('#'+i).addEventListener('input', simA));
+['b-n','b-pct','b-atual','b-novo','b-total'].forEach(i => $('#'+i).addEventListener('input', simB));
+simA(); simB();
+
+/* ---------- pontos em aberto ---------- */
+const VAL = [
+  {id:'v1', t:'Contagem do evento White Wall Error por status (200/429/5xx) e por dia, mais o volume total de chamadas ao Whitewall.', why:'Mostra se a "falta de continuidade" é cota/tokens ou erro técnico.', tag:'Fase 2', cls:'b-blue'},
+  {id:'v2', t:'Configuração do Desk: tempo de inatividade, capacidade por atendente (agentSlots), regras /rules (Equipe → time) e atendentes online por hora.', why:'Valida a hipótese de ocupação e revela o que "Auxiliares" é de fato.', tag:'Bloqueia #3', cls:'b-amber'},
+  {id:'v3', t:'Definição exata do TME e do TMA (quais timestamps a query usa), fila por hora e abandono em fila.', why:'O TME de ~9 s contradiz "a fila é o maior problema".', tag:'Fase 2', cls:'b-blue'},
+  {id:'v4', t:'Para tickets null e Inatividade: quantos tiveram mensagem do cliente após o atendente e o split por origem (HSM x receptivo).', why:'Separa ticket morto de ticket legítimo sem tag. É a premissa-chave do simulador B.', tag:'Bloqueia #3', cls:'b-amber'},
+  {id:'v5', t:'Transbordos por Equipe e Assunto por mês, com a origem (menu, subbot, HSM, falha técnica).', why:'Separa demanda legítima de fallback.', tag:'Fase 2', cls:'b-blue'},
+  {id:'v6', t:'Export dos 6 assistentes do Whitewall (instruções, skills, modelo, temperatura) e custo de tokens por assistente.', why:'O JSON só mostra placeholders; consumo de tokens é a suspeita central.', tag:'Fase 2', cls:'b-blue'},
+  {id:'v7', t:'Amostra anonimizada de 200 a 300 textos livres em resposta aos templates.', why:'Base para a taxonomia e o teste do classificador.', tag:'Quick win', cls:'b-green', note:'Pode vir do tracking "Detalhado" existente.'},
+  {id:'v8', t:'Studio: como o Builder chama o agent, tempo de resposta, log e custo por chamada, uso de APIs como ferramenta e handoff para o Desk.', why:'Não há nada do Studio nos JSONs.', tag:'Quick win', cls:'b-green'},
+  {id:'v9', t:'Contagem de re-perguntas e de transferências após a 3ª tentativa nos blocos de input inesperado.', why:'Dimensiona o ganho de trocar a mensagem de erro por botões.', tag:'Quick win', cls:'b-green'}
+];
+const DEC = [
+  {id:'d1', t:'Blip Copilot: a Fit usa ou tem licença? Há interesse em resumo automático para o atendente?', why:'Oferta de produto sugerida para o resumo (proposta #11). Escopo e licenciamento a validar com a Blip.', tag:'Oferta', cls:'b-blue'},
+  {id:'d2', t:'Quais são os 2 principais motivos de contato para focar o quick win?', why:'Pelos eventos, financeiro; o segundo seria falta de energia ou titularidade.', tag:'Quick win', cls:'b-green'},
+  {id:'d3', t:'O que o cliente entende por "retenção": reter o usuário no bot ou reter o cliente da Fit?', why:'Define a métrica de sucesso.', tag:'Quick win', cls:'b-green'},
+  {id:'d4', t:'Onde está o aceite de privacidade e o opt-out (opt-in do template?)', why:'Não aparece nos fluxos.', tag:'Governança', cls:'b-gray'},
+  {id:'d5', t:'Quem pode rotacionar as credenciais e liberar acesso ao Desk, ao Whitewall e ao Studio?', why:'Pré-requisito para #1 e #5.', tag:'Imediato', cls:'b-red'},
+  {id:'d6', t:'Aprovação para fechar mais cedo tickets em que o cliente nunca respondeu.', why:'Muda a operação do Desk (proposta #3).', tag:'Bloqueia #3', cls:'b-amber'}
+];
+const Q = [
+  ['Objetivo e sucesso','Quando vocês falam em "aumentar retenção pela IA", é reter o usuário no bot (menos transbordo) ou reter o cliente da Fit (churn)?','Define a métrica de sucesso do quick win.',1],
+  ['Objetivo e sucesso','Quais são, na visão de vocês, os dois principais motivos de contato? Eles batem com financeiro e falta de energia/titularidade?','Hoje ~60% dos tickets não têm motivo registrado.',1],
+  ['Objetivo e sucesso','O que seria "ganho" para o time de atendimento: menos fila, menos tickets ou menor TMA?','Escolhe o que medimos primeiro.',0],
+  ['Objetivo e sucesso','Qual a janela para ver resultado do primeiro ciclo?','Define o escopo do quick win.',0],
+  ['Fila e operação','O que vocês chamam de "fila"? É o cliente esperando para ser atendido, ou muitos tickets abertos por atendente?','O TME mediano é de ~9 s, o que não parece espera.',1],
+  ['Fila e operação','Em que dias e horários a fila pesa mais? Isso acompanha as campanhas de disparo?','Setembro teve +43% de tickets.',0],
+  ['Fila e operação','O que é a equipe "Auxiliares" e como ela se relaciona com "Atendimento N1"? Por que é o padrão?','Recebe ~85k transbordos e é o padrão do roteamento.',0],
+  ['Fila e operação','Quanto tempo o Desk espera antes de fechar um ticket por inatividade? Foi decisão ou padrão?','Tickets de inatividade têm TMA mediano de ~25 min.',1],
+  ['Fila e operação','Por que ~60% dos tickets chegam sem tag ou como "Inatividade"? A tag é obrigatória para o atendente?','Sem motivo registrado, a triagem não deixa rastro.',1],
+  ['Fila e operação','A capacidade é de 5 tickets simultâneos por atendente? Foi calibrada para o WhatsApp?','A regra de fila do bot assume 5.',0],
+  ['Regras de transbordo','O limite de mais de 8 faturas (2ª via), 9 (dúvidas) e 18 UCs foi definido por quê? Ainda é válido?','Esses limites transferem automaticamente.',0],
+  ['Regras de transbordo','"Alterar cadastro" vai direto ao humano. Há motivo regulatório ou foi falta de automação?','Candidato a autosserviço.',0],
+  ['Regras de transbordo','Na IA de Cancelamento, qualquer resposta do cliente leva ao atendente. É intencional?','Pelo desenho, a IA só reengaja e nunca conversa.',1],
+  ['Regras de transbordo','Para "Acompanhamento GD" e "Aguardando confirmação para iniciar troca", o humano acrescenta algo ou só repete o status?','Pode virar mensagem informativa no bot.',0],
+  ['Regras de transbordo','Quais casos de falta de energia o atendente realmente resolve, e quais ele só informa?','Define o que a IA pode assumir.',0],
+  ['IA e tokens','Quem mantém hoje os assistentes de IA e os prompts? Houve mudança recente?','Os prompts reais não estão nos fluxos.',0],
+  ['IA e tokens','Qual modelo está em uso e como o custo é acompanhado?','O bloco mostra gpt-3.5-turbo, provavelmente resto de template.',0],
+  ['IA e tokens','Quando vocês dizem que a IA "interrompe a continuidade do atendimento", o que o cliente vê? Mensagem de erro, silêncio ou transferência?','Falha da IA vira transbordo direto no desenho atual.',1],
+  ['IA e tokens','Existe limite de cota ou orçamento de tokens que já foi atingido?','Pode explicar quedas em picos.',0],
+  ['IA e tokens','Há disposição para migrar os agents para o Studio?','Premissa do plano.',0],
+  ['IA e tokens','Vocês já usam o Blip Copilot no atendimento humano? Teriam interesse em resumo automático para o atendente?','Oferta sugerida na proposta #11.',0],
+  ['Jornada e conteúdo','Depois que o cliente recebe o boleto ou o PIX, o que vocês esperam que aconteça? O encerramento hoje é intencional?','81k "falta de interação" no fim do envio de boletos.',0],
+  ['Jornada e conteúdo','Respostas depois de 24h do template voltam ao menu inicial. Vocês preferem outro comportamento?','66k respostas "fora do prazo".',0],
+  ['Jornada e conteúdo','Quais são os 5 textos que clientes mais escrevem em resposta aos templates de cobrança?','Base para a taxonomia do classificador.',0],
+  ['Jornada e conteúdo','Os routers FIT e iGreen precisam ter jornadas separadas, ou podem compartilhar a lógica?','O router iGreen concentra 176k conversas.',0],
+  ['Dados e governança','Quem consome os dashboards de transbordo e quais indicadores usam hoje para decidir?','Alinha a medição.',0],
+  ['Dados e governança','Podemos receber 200 a 300 textos livres anonimizados de clientes para treinar o classificador?','Evita depender de dados novos do tracking.',0],
+  ['Dados e governança','Há credenciais fixas nos fluxos (CRM, API, e-mail). Estão cientes? Quem pode rotacionar?','~94 ocorrências.',0],
+  ['Dados e governança','Onde fica o aceite de privacidade do cliente? No opt-in do template?','Não aparece nos fluxos.',0],
+  ['Dados e governança','Os alertas de erro vão por e-mail para duas pessoas. Isso é suficiente ou querem um canal compartilhado?','Ponto único de falha.',0],
+  ['Decisão e próximos passos','Quem decide o escopo do tech assessment e quem pode liberar acesso ao Desk, ao Whitewall e ao Studio?','Pré-requisito para o quick win.',1]
+];
+const state = Object.assign({}, store('fit-open-v1') || {});
+function persist(){ store('fit-open-v1', state); }
+function itemHtml(x, kind){
+  const done = !!state[x.id];
+  return `<div class="q-item ${done ? 'done' : ''}" data-id="${x.id}"><input type="checkbox" id="c-${x.id}" ${done ? 'checked' : ''} aria-label="Marcar como resolvido"><label for="c-${x.id}" style="cursor:pointer"><div class="q-text">${x.t}</div><div class="q-why">${x.why}${x.note ? ' ' + x.note : ''}</div><div class="q-meta">${x.tag ? '<span class="badge '+x.cls+'">'+x.tag+'</span>' : ''}${x.theme ? '<span class="badge b-gray">'+x.theme+'</span>' : ''}${x.prio ? '<span class="badge b-red">Prioridade na reunião</span>' : ''}</div></label></div>`;
+}
+const QITEMS = Q.map((q, i) => ({id:'q'+(i+1), theme:q[0], t:(i+1) + '. ' + q[1], why:q[2], prio:!!q[3], raw:q[1]}));
+let qTheme = 'Todas', qPrio = false;
+function renderOpen(){
+  $('#list-val').innerHTML = VAL.map(x => itemHtml(x)).join('');
+  $('#list-dec').innerHTML = DEC.map(x => itemHtml(x)).join('');
+  const tf = $('#q-toolbar');
+  const themes = ['Todas', ...Array.from(new Set(Q.map(q => q[0])))];
+  tf.innerHTML = themes.map(t => `<button class="chip" data-theme="${t}" aria-pressed="${qTheme === t && !qPrio}">${t}</button>`).join('') + `<button class="chip" data-prio="1" aria-pressed="${qPrio}">★ Prioritárias</button>`;
+  const s = ($('#q-search').value || '').toLowerCase();
+  const vis = QITEMS.filter(x => (qPrio ? x.prio : (qTheme === 'Todas' || x.theme === qTheme)) && (!s || (x.t + x.why).toLowerCase().includes(s)));
+  $('#list-q').innerHTML = vis.map(x => itemHtml(x)).join('') || '<div class="alert-box info">Nenhuma pergunta encontrada.</div>';
+  window.__visQ = vis;
+  updateProgress();
+}
+function updateProgress(){
+  const all = [...VAL, ...DEC, ...QITEMS]; const done = all.filter(x => state[x.id]).length;
+  $('#prog-num').textContent = done + '/' + all.length;
+  $('#prog-bar').style.width = (done / all.length * 100) + '%';
+  $('#prog-bar-wrap').setAttribute('aria-valuenow', Math.round(done / all.length * 100));
+  const open = all.length - done; const pill = $('#open-pill'); pill.textContent = open; pill.style.display = open ? '' : 'none';
+}
+document.addEventListener('change', e => {
+  const it = e.target.closest('.q-item'); if(!it || e.target.type !== 'checkbox') return;
+  state[it.dataset.id] = e.target.checked; persist(); it.classList.toggle('done', e.target.checked); updateProgress();
+});
+document.addEventListener('click', e => {
+  const th = e.target.closest('[data-theme]'); if(th){ qTheme = th.dataset.theme; qPrio = false; renderOpen(); return; }
+  if(e.target.closest('[data-prio]')){ qPrio = !qPrio; renderOpen(); }
+});
+$('#q-search').addEventListener('input', renderOpen);
+$('#reset-open').addEventListener('click', () => { Object.keys(state).forEach(k => delete state[k]); persist(); renderOpen(); toast('Marcações limpas'); });
+function copyText(txt, okMsg){
+  const done = () => toast(okMsg);
+  try{ if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(txt).then(done, fallback); return; } }catch(e){}
+  fallback();
+  function fallback(){ const ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.select(); try{ document.execCommand('copy'); done(); }catch(e){ toast('Não foi possível copiar'); } ta.remove(); }
+}
+$('#copy-prio').addEventListener('click', () => copyText(QITEMS.filter(x => x.prio).map((x, i) => (i+1) + '. ' + x.raw).join('\n'), 'Perguntas prioritárias copiadas'));
+$('#copy-all').addEventListener('click', () => copyText((window.__visQ || []).map((x, i) => (i+1) + '. ' + x.raw).join('\n'), 'Perguntas copiadas'));
+renderOpen();
+
+/* ---------- inicialização ---------- */
+routeFromHash();
+</script>
+</body>
+</html>
